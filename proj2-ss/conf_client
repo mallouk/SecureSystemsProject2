@@ -22,7 +22,7 @@ if [ -d ${CLIENT} ]; then
     echo "Somebody has already claimed that client name. Try another one."
     exit 1
 fi
-
+mkdir clients/
 mkdir clients/${CLIENT}
 
 #Generate client key
