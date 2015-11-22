@@ -1,0 +1,16 @@
+#!/bin/bash
+
+rm -rf ca
+mkdir -p ca
+echo "01" > ca/serial
+touch ca/index.txt
+OPENSSLFILE_CA=securesysCA
+DIR=`pwd`
+
+echo ""
+echo "Generating CA's Key..."
+openssl genrsa -out ca/${OPENSSLFILE_CA}.key 1024 
+
+
+openssl req -config openssl.cnf -key ca/${OPENSSLFILE_CA}.key -new -x509 -days 365 -sha256 -extensions v3_ca -out ca/${OPENSSLFILE_CA}.crt
+chmod ugo-rwx,u+r ca/${OPENSSLFILE_CA}.key
