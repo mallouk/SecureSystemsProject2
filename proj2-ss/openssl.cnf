@@ -144,10 +144,10 @@ localityName_default		= Atlanta
 #1.organizationName_default	= World Wide Web Pty Ltd
 
 organizationalUnitName		= Organizational Unit Name (eg, section)
-#organizationalUnitName_default	=
+organizationalUnitName_default	= GT
 
 commonName			= Common Name (e.g. server FQDN or YOUR name)
-commonName_default		= Georgia Tech
+commonName_default		= localhost
 commonName_max			= 64
 
 emailAddress			= Email Address

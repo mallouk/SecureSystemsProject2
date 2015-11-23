@@ -13,6 +13,8 @@ clean:
 	rm -rf ca
 	rm -rf server
 	rm -rf clients
+	rm -rf securesysServer.key
+	rm -rf bundle.crt
 
 verify:
 	@echo "Verify CA Cert..."
