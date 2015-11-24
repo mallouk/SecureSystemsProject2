@@ -1,6 +1,8 @@
 #!/bin/bash
 
 sudo mkdir -p /etc/nginx/ssl
+sudo cp -r ssl.conf /etc/nginx/conf.d/
+
 cat server/securesysServer.crt ca/securesysCA.crt > bundle.crt
 sudo cp -r bundle.crt /etc/nginx/ssl/
 
