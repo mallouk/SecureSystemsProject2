@@ -1,1 +1,10 @@
-README
+1) First run the conf_ca script to generate the certs for the CA
+./conf_ca
+
+2) Next run the conf_server script to generate the certs for the server
+./conf_server
+
+3) Now run the conf_client script with a client name argument
+./conf_client mototito
+
+4) Run the transfer script to push these certs to the nginx system files, and set up the nginx server and ssl connections (hopefully it works).
