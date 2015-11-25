@@ -24,6 +24,7 @@ if [ -d ${CLIENT} ]; then
 fi
 mkdir clients/
 mkdir clients/${CLIENT}
+mkdir -p clients/${CLIENT}/files
 
 #Generate client key
 echo "Generating Client Side Key..."

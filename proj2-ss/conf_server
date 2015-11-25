@@ -8,6 +8,7 @@ fi
 
 rm -rf server
 mkdir -p server
+mkdir -p server/files
 
 #Define vars
 OPENSSLFILE_CA=securesysCA
