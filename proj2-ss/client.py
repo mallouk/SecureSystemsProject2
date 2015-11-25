@@ -20,6 +20,6 @@ server_crt = os.getcwd() + '/server/securesysServer.crt'
 client_crt = os.getcwd() + '/clients/' + args.client + '/securesysClient.crt'
 client_key = os.getcwd() + '/clients/' + args.client + '/securesysClient.key'
 
-
-r = requests.get("https://localhost/checkout", verify = cert_auth_crt)
-print(r)
+data={'client':args.client,'check_in':args.check_in}
+r = requests.get("https://localhost/", verify = cert_auth_crt, params=data)
+print(r.text)
