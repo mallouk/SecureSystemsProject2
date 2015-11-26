@@ -79,7 +79,7 @@ def check_in():
         if fileSecFlag == 'CONFIDENTIALITY':
             #Generate random key used for encryption
             randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
-            
+            #Write key to a file.....
             encrypt_file(randomKey, fullPathFile + '')
             if os.path.isfile(serverDir + fileCheckIn + '.enc'):
                 os.remove(serverDir + fileCheckIn + '.enc')
