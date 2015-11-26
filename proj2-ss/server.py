@@ -75,8 +75,10 @@ def check_in():
     if not os.path.isfile(fullPathFile):
         return "File doesn't exist. Try again please."
     else:
+        #Deal with specific flag options
         if fileSecFlag == 'CONFIDENTIALITY':
-            randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(16))
+            #Generate random key used for encryption
+            randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
             
             encrypt_file(randomKey, fullPathFile + '')
             if os.path.isfile(serverDir + fileCheckIn + '.enc'):
