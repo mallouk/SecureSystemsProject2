@@ -30,6 +30,7 @@ server_crt = os.getcwd() + '/server/securesysServer.crt'
 client_crt = os.getcwd() + '/clients/' + args.client + '/securesysClient.crt'
 client_key = os.getcwd() + '/clients/' + args.client + '/securesysClient.key'
 
+
 #Bundle data together and determine what flags were passed to execute the respective code
 if args.check_in != defaultArg:
     data={'client':args.client, 'file':args.check_in[0], 'sec_flag':args.check_in[1]}

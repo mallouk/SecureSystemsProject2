@@ -68,10 +68,12 @@ def check_in():
     if not os.path.isfile(fullPathFile):
         return "File doesn't exist. Try again please."
     else:
-        shutil.copy(fullPathFile, serverDir)
         if fileSecFlag == 'CONFIDENTIALITY':
             print 't'
             encrypt_file('keykeykeykeykeyk', fullPathFile + '')
+            if os.path.isfile(serverDir + fileCheckIn + '.enc'):
+                os.remove(serverDir + fileCheckIn + '.enc')
+            shutil.move(fullPathFile + '.enc', serverDir)
             #Encrypt
         elif fileSecFlag == 'INTEGRITY':
             print 'int'
