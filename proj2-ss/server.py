@@ -17,10 +17,12 @@ def encrypt_file(key, in_filename):
     if not out_filename:
         out_filename = in_filename + '.enc'
 
+    #Generate IV, get file size, and encrypting object for AES
     iv = ''.join(chr(random.randint(0, 0xFF)) for i in range(16))
     encryptor = AES.new(key, AES.MODE_CBC, iv)
     filesize = os.path.getsize(in_filename)
 
+    #Write file to disk
     with open(in_filename, 'rb') as infile:
         with open(out_filename, 'wb') as outfile:
             outfile.write(struct.pack('<Q', filesize))
@@ -34,7 +36,8 @@ def encrypt_file(key, in_filename):
                     chunk += ' ' * (16 - len(chunk) % 16)
 
                 outfile.write(encryptor.encrypt(chunk))
-       
+
+#Method to decrypt file, given a key, ciphertext file, and the name of what the file should be called, this method should return a decrypted version of a file.
 def decrypt_file(key, in_filename, out_filename=None):
     chunksize = 24*1024
     if not out_filename:
