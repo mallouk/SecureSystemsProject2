@@ -10,6 +10,7 @@ import random
 import struct
 app = Flask(__name__)
 
+#Method to encrypt a file. Give it a key and file to encrypt. It will spit back out an encrypted version of said file. 
 def encrypt_file(key, in_filename):
     out_filename = ''
     chunksize=64*1024
@@ -71,6 +72,7 @@ def check_in():
     else:
         if fileSecFlag == 'CONFIDENTIALITY':
             randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(16))
+            
             encrypt_file(randomKey, fullPathFile + '')
             if os.path.isfile(serverDir + fileCheckIn + '.enc'):
                 os.remove(serverDir + fileCheckIn + '.enc')
