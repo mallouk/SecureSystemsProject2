@@ -5,6 +5,7 @@ import os
 import sys
 import requests
 import shutil
+import string
 import random
 import struct
 app = Flask(__name__)
@@ -69,18 +70,19 @@ def check_in():
         return "File doesn't exist. Try again please."
     else:
         if fileSecFlag == 'CONFIDENTIALITY':
-            print 't'
-            encrypt_file('keykeykeykeykeyk', fullPathFile + '')
+            randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(16))
+            encrypt_file(randomKey, fullPathFile + '')
             if os.path.isfile(serverDir + fileCheckIn + '.enc'):
                 os.remove(serverDir + fileCheckIn + '.enc')
             shutil.move(fullPathFile + '.enc', serverDir)
-            #Encrypt
+            return 'File encrypted and sent to server.'
         elif fileSecFlag == 'INTEGRITY':
             print 'int'
+            return 'File signed and sent to server.'
             #Doc Sign
         else:
-            return 'File copied, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed'
-        return "File exists!" + fileSecFlag
+            shutil.copy(fullPathFile, serverDir)
+            return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
 
 @app.route("/check_out")
 def checkout():
