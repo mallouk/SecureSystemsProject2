@@ -43,11 +43,13 @@ def decrypt_file(key, in_filename, out_filename=None):
     if not out_filename:
         out_filename = os.path.splitext(in_filename)[0]
 
+    #Generate IV, and decryptor object.
     with open(in_filename, 'rb') as infile:
         origsize = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]
         iv = infile.read(16)
         decryptor = AES.new(key, AES.MODE_CBC, iv)
 
+        #Write file to disk
         with open(out_filename, 'wb') as outfile:
             while True:
                 chunk = infile.read(chunksize)
@@ -57,19 +59,19 @@ def decrypt_file(key, in_filename, out_filename=None):
 
             outfile.truncate(origsize)
 
-
+#Check in method used 
 @app.route("/check_in")
 def check_in():
+    #Pull in parameters from URL
     client = request.args.get('client')
     fileCheckIn = request.args.get('file')
     fileSecFlag = request.args.get('sec_flag')
-    
+
+    #Sanitize and get absolute dirs for files
     fullPathFile = os.getcwd()+ '/clients/' + client + '/files/' + fileCheckIn
     serverDir = os.getcwd() + '/server/files/'
-    flagMess = ''
-    if not fileSecFlag == 'CONFIDENTIALITY' or not fileSecFlag == 'INTEGRITY':
-        flagMess = 'hiellow'
-    
+
+    #If file exists, check the sec flag and transfer file accordiingly. Otherwise, throw an error saying that the file doesn't exist
     if not os.path.isfile(fullPathFile):
         return "File doesn't exist. Try again please."
     else:
@@ -89,9 +91,11 @@ def check_in():
             shutil.copy(fullPathFile, serverDir)
             return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
 
+#Checkout method
 @app.route("/check_out")
 def checkout():
     return 'check_out'
 
+#Execute server and take requests
 if __name__ == '__main__':
     app.run()
