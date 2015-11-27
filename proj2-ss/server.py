@@ -96,11 +96,12 @@ def check_in():
         elif fileSecFlag == 'INTEGRITY':
             #Write file to server
             shutil.copyfile(fullPathFile, serverDir + fileCheckIn + '.sign')
-
+            #Get file contents
             message = ''
             with open(serverDir + fileCheckIn + '.sign') as myfile:
                 message = myfile.read().replace('\n', '')
-                
+
+            #Generate signature and construct metadata file
             hash_sha2 = hashlib.sha256(message).hexdigest()
             filePointer = open(serverDir + '.' + fileCheckIn + '.sign', 'w')
             delegationFlag = 'NO'
@@ -108,7 +109,6 @@ def check_in():
             filePointer.write(dataToFile)
             filePointer.close()
             return 'File signed and sent to server.'
-            #Doc Sign
         else:
             #Write metadata file
             filePointer = open(serverDir + '.' + fileCheckIn, 'w')
@@ -127,20 +127,30 @@ def check_out():
     client = request.args.get('client')
     fileCheckIn = request.args.get('file')
     serverDir = os.getcwd() + '/server/files/'
-
+    clientDir = os.getcwd() + '/clients/' + client + '/files/'
     if not os.path.isfile(serverDir + fileCheckIn):
         return "File doesn't exist. Try again please."
     else:
         #Check if we're the owner
-        file_line = 1
+        line_counter = 1
         with open(serverDir + '.'+  fileCheckIn, 'r') as metaFile:
             for line in metaFile:
-                parsedLine = line.replace('\n','').split('***')
-                if (parsedLine[0] == client and file_line == 1):
-                    #We are owner and so we return the file
-                else:
-                    #Check if have delegation
-                    file_line+=1
+                if line_counter == 1:
+                    parsedLine = line.replace('\n','').split('***')
+                    if parsedLine[len(parsedLine)-1] == 'NO' and not parsedLine[0] == client:
+                        return 'Sorry. You do not have permissions to access this file.'
+                    elif parsedLine[0] == client:
+                        #We check to see if we're scanning a NONE sec_flag metadata file, and if we are, we just send the data back. Otherwise, we may have to check hashes or decrypt the file.
+                        if len(parsedLine) == 2:
+                            shutil.copy(serverDir + fileCheckIn, clientDir)
+                            return 'File copied from server to client: ' + client
+                        else:
+                            fileExten=fileCheckIn.split('.')
+                            key_or_hash = parsedLiine[1]
+                            #If file is .enc then we need to decrypt, else check signature
+                            if fileExten == '.enc':
+                                decrypt_file(key_or_hash, serverDir + fileCheckIn)
+                                return 'moo'
     return 'check_out'
 
 #Execute server and take requests
