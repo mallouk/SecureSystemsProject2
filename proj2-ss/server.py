@@ -169,6 +169,26 @@ def check_out():
 
 @app.route('/safe_delete')
 def safe_delete():
+    client = request.args.get('client')
+    fileCheckIn = request.args.get('file')
+    serverDir = os.getcwd() + '/server/files/'
+    clientDir = os.getcwd() + '/clients/' + client + '/files/'
+    if not os.path.isfile(serverDir + fileCheckIn):
+        return "File doesn't exist. Try again please."
+    else:
+        #Check if we're the owner
+        line_counter = 1
+        with open(serverDir + '.'+  fileCheckIn, 'r') as metaFile:
+            for line in metaFile:
+                if line_counter == 1:
+                    parsedLine = line.replace('\n','').split('***')
+                    if parsedLine[len(parsedLine)-1] == 'NO' and not parsedLine[0] == client:
+                        return 'Sorry. You do not have permissions to access this file.'
+                    elif parsedLine[0] == client:
+                        os.remove(serverDir + fileCheckIn)
+                        os.remove(serverDir + '.' + fileCheckIn)
+                        return 'File deleted from server'
+                        
     return 'safe'
     
 
