@@ -246,6 +246,7 @@ def delegate():
                         metaFile.close()
                         os.remove(serverDir + '.' + file_delegate)
                         os.rename(serverDir + '.' + file_delegate + '_tmp', serverDir + '.' + file_delegate)
+                        return 'Delegation written to file ' + file_delegate
     return 'delegate'
 
 #Execute server and take requests
