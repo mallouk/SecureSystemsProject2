@@ -79,13 +79,14 @@ def check_in():
         if fileSecFlag == 'CONFIDENTIALITY':
             #Generate random key used for encryption
             randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
-            #Write owner and  key to a file.....
+            #Write owner and  key to a metadata file.....
             filePointer = open(serverDir + '.' + fileCheckIn + '.enc', 'w')
             delegationFlag = 'NO'
             dataToFile = client + '***' + randomKey + '***' + delegationFlag
             filePointer.write(dataToFile)
             filePointer.close()
             
+            #Encrypt file and send it to server
             encrypt_file(randomKey, fullPathFile + '')
             if os.path.isfile(serverDir + fileCheckIn + '.enc'):
                 os.remove(serverDir + fileCheckIn + '.enc')
@@ -96,11 +97,14 @@ def check_in():
             return 'File signed and sent to server.'
             #Doc Sign
         else:
+            #Write metadata file
             filePointer = open(serverDir + '.' + fileCheckIn, 'w')
             delegationFlag = 'NO'
             dataToFile = client + '***' + delegationFlag
             filePointer.write(dataToFile)
             filePointer.close()
+            
+            #Send actual file to server
             shutil.copy(fullPathFile, serverDir)
             return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
 
