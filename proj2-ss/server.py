@@ -163,9 +163,14 @@ def check_out():
                                     return 'File signatured checked and match confirmed. File sent to client: ' + client
                                 else:
                                     return 'File signatured checked with no match. File transfered aborted.'
-                    else:
+                    else: #If we have a delegation flag of 'YES' and we aren't the owner, execute this.
                         return 'Will handle delegation'
     return 'check_out'
+
+@app.route('/safe_delete')
+def safe_delete():
+    return 'safe'
+    
 
 #Execute server and take requests
 if __name__ == '__main__':

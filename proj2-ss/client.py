@@ -12,9 +12,10 @@ parser = argparse.ArgumentParser(argument_default=defaultArg)
 #Create parser arguments for checking, we store whatever value is passed to them.
 parser.add_argument('--client', action='store', required=True)
 parser.add_argument('--check_in', action='store')
-parser.add_argument('--sec_flag', action='store')
 parser.add_argument('--check_out', action='store')
+parser.add_argument('--sec_flag', action='store')
 parser.add_argument('--delegate', action='store')
+parser.add_argument('--safe_delete', action='store')
 
 #Parse the args and place them in a var. We create the directory paths to wherever our certs and keys are for referencing.
 args = parser.parse_args();
@@ -43,7 +44,10 @@ elif args.check_out != defaultArg:
     print r.text
 elif args.delegate != defaultArg:
     print('arg delegate')
-    
+elif args.safe_delete != defaultArg:
+    data={'client':args.client, 'file':args.safe_delete}
+    r = requests.get("http://localhost:5000/safe_delete", verify = cert_auth_crt, params=data)
+    print r.text
 
 
 #r = requests.get("https://localhost/", verify = cert_auth_crt, params=data)
