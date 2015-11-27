@@ -9,6 +9,7 @@ import string
 import random
 import struct
 import hashlib
+import time
 app = Flask(__name__)
 
 #Method to encrypt a file. Give it a key and file to encrypt. It will spit back out an encrypted version of said file. 
@@ -216,8 +217,35 @@ def delegate():
         return "You must delegate either 'checkin', 'checkout', 'checkin|checkout' or 'owner' to a client. You've specificed some odd option. Try again please."
     elif not (prop_delegation == 'true' or prope_delegation == 'false'):
         return "You must specific whether a particular client and delegation permissions via true/false."
-    else:
-        return 'moo'
+    else: #Now we know we have all good data, so we construct to insert our delegation into the system
+        #Check if we must decrypt first.
+        fileExten=file_delegate.spilt('.')
+        curr_time_seconds = int(round(time.time()))
+        expire_time = curr_time_seconds + time
+        if len(fileExten) == 2:
+            if fileExten[1] == 'enc':
+                #We decrypt first and then insert data and then re-encrypt
+                print 'decrypt here'
+        else:
+            first_line=''
+            with open(serverDir + '.' + file_delegate, 'r') as metaFile:
+                with open(serverDir + '.' + file_delegate + '_tmp', 'w') as metaFileWrite:
+                    first_line = metafile.readline().replace('\n','')
+                    parsed_first_line = first_line.split('***')
+                    first_line=''
+                    for x in range(0, len(parsed_first_line)-1):
+                        first_line+=parsed_first_line[x]+'***'
+                    
+                        first_line+='YES\n'
+                        metaFileWrite.write(first_line)
+                        for line in metafile:
+                            metaFileWrite.write(line)
+                    
+                        metaFileWrite.write('\n' + client_delegate + '***' + expire_time + '***' + permission + '***' + prop_delegation)
+                        metaFileWrite.close()
+                        metaFile.close()
+                        os.remove(serverDir + '.' + file_delegate)
+                        os.rename(serverDir + '.' + file_delegate + '_tmp', serverDir + '.' + file_delegate)
     return 'delegate'
 
 #Execute server and take requests
