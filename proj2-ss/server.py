@@ -123,7 +123,24 @@ def check_in():
 
 #Checkout method
 @app.route("/check_out")
-def checkout():
+def check_out():
+    client = request.args.get('client')
+    fileCheckIn = request.args.get('file')
+    serverDir = os.getcwd() + '/server/files/'
+
+    if not os.path.isfile(serverDir + fileCheckIn):
+        return "File doesn't exist. Try again please."
+    else:
+        #Check if we're the owner
+        file_line = 1
+        with open(serverDir + '.'+  fileCheckIn, 'r') as metaFile:
+            for line in metaFile:
+                parsedLine = line.replace('\n','').split('***')
+                if (parsedLine[0] == client and file_line == 1):
+                    #We are owner and so we return the file
+                else:
+                    #Check if have delegation
+                    file_line+=1
     return 'check_out'
 
 #Execute server and take requests

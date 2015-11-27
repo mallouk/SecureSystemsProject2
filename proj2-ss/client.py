@@ -38,7 +38,9 @@ if args.check_in != defaultArg:
     r = requests.get("http://localhost:5000/check_in", verify = cert_auth_crt, params=data)
     print(r.text)
 elif args.check_out != defaultArg:
-    print('arg checkout')
+    data={'client':args.client, 'file':args.check_out}
+    r = requests.get("http://localhost:5000/check_out", verify = cert_auth_crt, params=data)
+    print r.text
 elif args.delegate != defaultArg:
     print('arg delegate')
     
