@@ -38,13 +38,18 @@ if args.check_in != defaultArg:
     data={'client':args.client, 'file':args.check_in, 'sec_flag':args.sec_flag}
     r = requests.get("http://localhost:5000/check_in", verify = cert_auth_crt, params=data)
     print(r.text)
-elif args.check_out != defaultArg:
+
+if args.check_out != defaultArg:
     data={'client':args.client, 'file':args.check_out}
     r = requests.get("http://localhost:5000/check_out", verify = cert_auth_crt, params=data)
     print r.text
-elif args.delegate != defaultArg:
+
+if args.delegate != defaultArg:
+    data={'client':args.client, 'delegate':args.delegate}
+    r = requests.get("http://localhost:5000/delegate", verify = cert_auth_crt, params=data)
     print('arg delegate')
-elif args.safe_delete != defaultArg:
+
+if args.safe_delete != defaultArg:
     data={'client':args.client, 'file':args.safe_delete}
     r = requests.get("http://localhost:5000/safe_delete", verify = cert_auth_crt, params=data)
     print r.text

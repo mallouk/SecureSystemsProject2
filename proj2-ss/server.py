@@ -188,9 +188,13 @@ def safe_delete():
                         os.remove(serverDir + fileCheckIn)
                         os.remove(serverDir + '.' + fileCheckIn)
                         return 'File deleted from server'
+                    else: #We check our delegations
                         
     return 'safe'
-    
+
+@app.route('/delegate')
+def delegate():
+    return 'delegate'
 
 #Execute server and take requests
 if __name__ == '__main__':
