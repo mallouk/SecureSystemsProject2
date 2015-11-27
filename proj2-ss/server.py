@@ -146,11 +146,23 @@ def check_out():
                             return 'File copied from server to client: ' + client
                         else:
                             fileExten=fileCheckIn.split('.')
-                            key_or_hash = parsedLiine[1]
+                            key_or_hash = parsedLine[1]
                             #If file is .enc then we need to decrypt, else check signature
-                            if fileExten == '.enc':
-                                decrypt_file(key_or_hash, serverDir + fileCheckIn)
-                                return 'moo'
+                            if fileExten[1] == 'enc':
+                                decrypt_file(key_or_hash, serverDir + fileCheckIn, clientDir + fileExten[0])
+                                return 'File decrypted and sent back to the client: ' + client
+                            #Since our file isn't enc it is sign and therefore under the INTEGRITY flag.
+                            else:
+                                message = ''
+                                with open(serverDir + fileCheckIn) as myfile:
+                                    message = myfile.read().replace('\n', '')
+
+                                hash_sha2 = hashlib.sha256(message).hexdigest()
+                                if (hash_sha2 == parsedLine[1]):
+                                    shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
+                                    return 'File signatured checked and match confirmed. File sent to client: ' + client
+                                else:
+                                    return 'File signatured checked with no match. File transfered aborted.'
     return 'check_out'
 
 #Execute server and take requests
