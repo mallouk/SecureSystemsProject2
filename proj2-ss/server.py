@@ -8,6 +8,7 @@ import shutil
 import string
 import random
 import struct
+import hashlib
 app = Flask(__name__)
 
 #Method to encrypt a file. Give it a key and file to encrypt. It will spit back out an encrypted version of said file. 
@@ -93,7 +94,19 @@ def check_in():
             shutil.move(fullPathFile + '.enc', serverDir)
             return 'File encrypted and sent to server.'
         elif fileSecFlag == 'INTEGRITY':
-            print 'int'
+            #Write file to server
+            shutil.copyfile(fullPathFile, serverDir + fileCheckIn + '.sign')
+
+            message = ''
+            with open(serverDir + fileCheckIn + '.sign') as myfile:
+                message = myfile.read().replace('\n', '')
+                
+            hash_sha2 = hashlib.sha256(message).hexdigest()
+            filePointer = open(serverDir + '.' + fileCheckIn + '.sign', 'w')
+            delegationFlag = 'NO'
+            dataToFile = client + '***' + hash_sha2 + '***' + delegationFlag
+            filePointer.write(dataToFile)
+            filePointer.close()
             return 'File signed and sent to server.'
             #Doc Sign
         else:
