@@ -14,7 +14,7 @@ parser.add_argument('--client', action='store', required=True)
 parser.add_argument('--check_in', action='store')
 parser.add_argument('--check_out', action='store')
 parser.add_argument('--sec_flag', action='store')
-parser.add_argument('--delegate', action='store')
+parser.add_argument('--delegate', action='store', nargs=5)
 parser.add_argument('--safe_delete', action='store')
 
 #Parse the args and place them in a var. We create the directory paths to wherever our certs and keys are for referencing.
@@ -45,7 +45,9 @@ if args.check_out != defaultArg:
     print r.text
 
 if args.delegate != defaultArg:
-    data={'client':args.client, 'delegate':args.delegate}
+    data={'client':args.client, 'delegate_file':args.delegate[0], 'delegate_client':args.delegate[1],
+          'delegate_time':args.delegate[2], 'delegate_permission': args.delegate[3],
+          'delegate_prop':args.delegate[4]}
     r = requests.get("http://localhost:5000/delegate", verify = cert_auth_crt, params=data)
     print('arg delegate')
 

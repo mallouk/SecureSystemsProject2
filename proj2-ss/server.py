@@ -170,23 +170,23 @@ def check_out():
 @app.route('/safe_delete')
 def safe_delete():
     client = request.args.get('client')
-    fileCheckIn = request.args.get('file')
+    file_delete = request.args.get('file')
     serverDir = os.getcwd() + '/server/files/'
     clientDir = os.getcwd() + '/clients/' + client + '/files/'
-    if not os.path.isfile(serverDir + fileCheckIn):
+    if not os.path.isfile(serverDir + file_delete):
         return "File doesn't exist. Try again please."
     else:
         #Check if we're the owner
         line_counter = 1
-        with open(serverDir + '.'+  fileCheckIn, 'r') as metaFile:
+        with open(serverDir + '.'+  file_delete, 'r') as metaFile:
             for line in metaFile:
                 if line_counter == 1:
                     parsedLine = line.replace('\n','').split('***')
                     if parsedLine[len(parsedLine)-1] == 'NO' and not parsedLine[0] == client:
                         return 'Sorry. You do not have permissions to access this file.'
                     elif parsedLine[0] == client:
-                        os.remove(serverDir + fileCheckIn)
-                        os.remove(serverDir + '.' + fileCheckIn)
+                        os.remove(serverDir + file_delete)
+                        os.remove(serverDir + '.' + file_delete)
                         return 'File deleted from server'
                     else: #We check our delegations
                         
@@ -194,6 +194,24 @@ def safe_delete():
 
 @app.route('/delegate')
 def delegate():
+    client = request.args.get('client')
+    file_delegate = request.args.get('delegate_file')
+    client_delegate = request.args.get('delegate_client')
+    time = request.args.get('delegate_time')
+    permission = request.args.get('delegate_permission')
+    prop_delegation = request.args.get('delegate_prop')
+    time = int(float(time))
+    
+    serverDir = os.getcwd() + '/server/files/'
+    clientDir = os.getcwd() + '/clients/' + client + '/files/'
+    if not os.path.isfile(serverDir + file_delegate):
+        return "File doesn't exist. Try again please."
+    elif client == client_delegate:
+        return "You can't delegate permissions to yourself as you're already an owner."
+    elif: time <= 0:
+        return "You can't assign someone a delegation of negative or zero time"
+    else:
+        
     return 'delegate'
 
 #Execute server and take requests
