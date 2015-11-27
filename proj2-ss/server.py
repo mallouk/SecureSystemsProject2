@@ -189,8 +189,7 @@ def safe_delete():
                         os.remove(serverDir + '.' + file_delete)
                         return 'File deleted from server'
                     else: #We check our delegations
-                        
-    return 'safe'
+                        return 'safe'
 
 @app.route('/delegate')
 def delegate():
@@ -204,14 +203,21 @@ def delegate():
     
     serverDir = os.getcwd() + '/server/files/'
     clientDir = os.getcwd() + '/clients/' + client + '/files/'
+    clientDir_delegate = os.getcwd() + '/clients' + client_delegate + '/files/'
     if not os.path.isfile(serverDir + file_delegate):
         return "File doesn't exist. Try again please."
     elif client == client_delegate:
         return "You can't delegate permissions to yourself as you're already an owner."
-    elif: time <= 0:
-        return "You can't assign someone a delegation of negative or zero time"
+    elif time <= 0:
+        return "You can't assign someone a delegation of negative or zero time."
+    elif (not os.path.isdir(clientDir_delegate)) or clientDir_delegate == 'ALL':
+        return "You must delegate to a client that currently exists."
+    elif not (permission == 'checkin' or permission == 'checkout' or permission == 'checkin|checkout' or permission == 'owner'):
+        return "You must delegate either 'checkin', 'checkout', 'checkin|checkout' or 'owner' to a client. You've specificed some odd option. Try again please."
+    elif not (prop_delegation == 'true' or prope_delegation == 'false'):
+        return "You must specific whether a particular client and delegation permissions via true/false."
     else:
-        
+        return 'moo'
     return 'delegate'
 
 #Execute server and take requests
