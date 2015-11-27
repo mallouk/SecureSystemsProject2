@@ -163,6 +163,8 @@ def check_out():
                                     return 'File signatured checked and match confirmed. File sent to client: ' + client
                                 else:
                                     return 'File signatured checked with no match. File transfered aborted.'
+                    else:
+                        return 'Will handle delegation'
     return 'check_out'
 
 #Execute server and take requests
