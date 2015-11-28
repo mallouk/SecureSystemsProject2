@@ -10,6 +10,7 @@ import random
 import struct
 import hashlib
 import time
+
 app = Flask(__name__)
 
 #Method to encrypt a file. Give it a key and file to encrypt. It will spit back out an encrypted version of said file. 
@@ -197,51 +198,53 @@ def delegate():
     client = request.args.get('client')
     file_delegate = request.args.get('delegate_file')
     client_delegate = request.args.get('delegate_client')
-    time = request.args.get('delegate_time')
+    time_delegation = request.args.get('delegate_time')
     permission = request.args.get('delegate_permission')
     prop_delegation = request.args.get('delegate_prop')
-    time = int(float(time))
+    curr_time = request.args.get('curr_time')
     
+    curr_time = int(float(curr_time))
+    time_delegation = int(float(time_delegation))
+
     serverDir = os.getcwd() + '/server/files/'
     clientDir = os.getcwd() + '/clients/' + client + '/files/'
-    clientDir_delegate = os.getcwd() + '/clients' + client_delegate + '/files/'
+    clientDir_delegate = os.getcwd() + '/clients/' + client_delegate + '/files/'
     if not os.path.isfile(serverDir + file_delegate):
         return "File doesn't exist. Try again please."
     elif client == client_delegate:
         return "You can't delegate permissions to yourself as you're already an owner."
-    elif time <= 0:
+    elif time_delegation <= 0:
         return "You can't assign someone a delegation of negative or zero time."
     elif (not os.path.isdir(clientDir_delegate)) or clientDir_delegate == 'ALL':
         return "You must delegate to a client that currently exists."
     elif not (permission == 'checkin' or permission == 'checkout' or permission == 'checkin|checkout' or permission == 'owner'):
         return "You must delegate either 'checkin', 'checkout', 'checkin|checkout' or 'owner' to a client. You've specificed some odd option. Try again please."
-    elif not (prop_delegation == 'true' or prope_delegation == 'false'):
+    elif prop_delegation != 'false':
         return "You must specific whether a particular client and delegation permissions via true/false."
     else: #Now we know we have all good data, so we construct to insert our delegation into the system
         #Check if we must decrypt first.
-        fileExten=file_delegate.spilt('.')
-        curr_time_seconds = int(round(time.time()))
-        expire_time = curr_time_seconds + time
-        if len(fileExten) == 2:
+        expire_time = curr_time + time_delegation
+        if '.' in file_delegate:
+            fileExten=file_delegate.spilt('.')
             if fileExten[1] == 'enc':
                 #We decrypt first and then insert data and then re-encrypt
                 print 'decrypt here'
         else:
-            first_line=''
             with open(serverDir + '.' + file_delegate, 'r') as metaFile:
                 with open(serverDir + '.' + file_delegate + '_tmp', 'w') as metaFileWrite:
-                    first_line = metafile.readline().replace('\n','')
+                    first_line = metaFile.readline().replace('\n','')
                     parsed_first_line = first_line.split('***')
                     first_line=''
+
                     for x in range(0, len(parsed_first_line)-1):
                         first_line+=parsed_first_line[x]+'***'
                     
-                        first_line+='YES\n'
+                        first_line+='YES'
                         metaFileWrite.write(first_line)
-                        for line in metafile:
+                        for line in metaFile:
                             metaFileWrite.write(line)
-                    
-                        metaFileWrite.write('\n' + client_delegate + '***' + expire_time + '***' + permission + '***' + prop_delegation)
+
+                        metaFileWrite.write('\n' + client_delegate + '***' + str(expire_time) + '***' + permission + '***' + prop_delegation)
                         metaFileWrite.close()
                         metaFile.close()
                         os.remove(serverDir + '.' + file_delegate)

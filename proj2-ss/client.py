@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 import argparse
+import time
 
 #Supress warnings when checking common name of CA cert
 requests.packages.urllib3.disable_warnings()
@@ -45,11 +46,12 @@ if args.check_out != defaultArg:
     print r.text
 
 if args.delegate != defaultArg:
+    curr_time_seconds = int(round(time.time()))
     data={'client':args.client, 'delegate_file':args.delegate[0], 'delegate_client':args.delegate[1],
           'delegate_time':args.delegate[2], 'delegate_permission': args.delegate[3],
-          'delegate_prop':args.delegate[4]}
+          'delegate_prop':args.delegate[4], 'curr_time':curr_time_seconds}
     r = requests.get("http://localhost:5000/delegate", verify = cert_auth_crt, params=data)
-    print('arg delegate')
+    print(r.text)
 
 if args.safe_delete != defaultArg:
     data={'client':args.client, 'file':args.safe_delete}

@@ -7,7 +7,7 @@ exp_time = curr_time + (time)
 print exp_time
 print exp_time - curr_time
 first_line=''
-brand='true fjoewoj mariasn'
+brand=4
 with open('/home/matthew/git/SecureSystemsProject2/proj2-ss/textfile', 'r') as metafile:
     with open('/home/matthew/git/SecureSystemsProject2/proj2-ss/textfile1', 'w') as metafile_w:
         first_line = metafile.readline().replace('\n','')
