@@ -62,6 +62,27 @@ def decrypt_file(key, in_filename, out_filename=None):
 
             outfile.truncate(origsize)
 
+def write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation):
+    with open(serverDir + '.' + file_delegate, 'r') as metaFile:
+        with open(serverDir + '.' + file_delegate + '_tmp', 'w') as metaFileWrite:
+            first_line = metaFile.readline().replace('\n','')
+            parsed_first_line = first_line.split('***')
+            first_line=''
+            
+            for x in range(0, len(parsed_first_line)-1):
+                first_line+=parsed_first_line[x]+'***'
+                    
+                first_line+='YES'
+                metaFileWrite.write(first_line)
+                for line in metaFile:
+                    metaFileWrite.write(line)
+
+                metaFileWrite.write('\n' + client_delegate + '***' + str(expire_time) + '***' + permission + '***' + prop_delegation)
+                metaFileWrite.close()
+                metaFile.close()
+                os.remove(serverDir + '.' + file_delegate)
+                os.rename(serverDir + '.' + file_delegate + '_tmp', serverDir + '.' + file_delegate)
+            
 #Check in method used 
 @app.route("/check_in")
 def check_in():
@@ -229,28 +250,12 @@ def delegate():
             if fileExten[1] == 'enc':
                 #We decrypt first and then insert data and then re-encrypt
                 print 'decrypt here'
+                write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
+                print 're-encrypt here'
+                return 'Metadata file decrypted, delegation written to file and file re-encrypted.'
         else:
-            with open(serverDir + '.' + file_delegate, 'r') as metaFile:
-                with open(serverDir + '.' + file_delegate + '_tmp', 'w') as metaFileWrite:
-                    first_line = metaFile.readline().replace('\n','')
-                    parsed_first_line = first_line.split('***')
-                    first_line=''
-
-                    for x in range(0, len(parsed_first_line)-1):
-                        first_line+=parsed_first_line[x]+'***'
-                    
-                        first_line+='YES'
-                        metaFileWrite.write(first_line)
-                        for line in metaFile:
-                            metaFileWrite.write(line)
-
-                        metaFileWrite.write('\n' + client_delegate + '***' + str(expire_time) + '***' + permission + '***' + prop_delegation)
-                        metaFileWrite.close()
-                        metaFile.close()
-                        os.remove(serverDir + '.' + file_delegate)
-                        os.rename(serverDir + '.' + file_delegate + '_tmp', serverDir + '.' + file_delegate)
-                        return 'Delegation written to file ' + file_delegate
-    return 'delegate'
+            write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
+            return 'Delegation written to file ' + file_delegate
 
 #Execute server and take requests
 if __name__ == '__main__':
