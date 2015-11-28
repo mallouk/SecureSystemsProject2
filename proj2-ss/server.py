@@ -84,10 +84,10 @@ def process_check_out(serverDir, clientDir, fileCheckIn, first_line):
             return 'File decrypted and signature checked with a match confirmed. File sent to client.'
         else: #If signature doesn't match
             return 'File has been modified in transit. Transfer aborted.'
-    else if '.enc' in fileCheckIn: #If we've only encrypted
+    elif '.enc' in fileCheckIn: #If we've only encrypted
         decrypt_file(key_or_hash, serverDir + fileCheckIn, clientDir + fileExten[0])
         return 'File decrypted and sent back to the client: ' + client
-    else if '.sign' in fileCheckIn: #Verify signature
+    elif '.sign' in fileCheckIn: #Verify signature
         signVer = verify_signature(serverDir, fileCheckIn, first_line[1])
         if signVer: #If signature matches
             shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
@@ -100,7 +100,7 @@ def process_check_out(serverDir, clientDir, fileCheckIn, first_line):
 
 
 def can_check_out(client, serverDir, fileCheckIn):
-    with open(serverDir + '.' + fileCheckIn 'r') as metafile:
+    with open(serverDir + '.' + fileCheckIn, 'r') as metafile:
         first_line = metafile.readline()
         for line in metafile:
             if '***' in line:
@@ -234,7 +234,7 @@ def check_out():
         #File exists, let's check if it's encrypted
         if '.enc' in fileCheckIn:
             #Decrypt meta file
-            
+            print 'decrypt here!'
         #Check if we're the owner
         isOwner = ''
         with open(serverDir + '.' + fileCheckIn, 'r') as meta:
