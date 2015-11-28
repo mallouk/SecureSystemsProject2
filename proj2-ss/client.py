@@ -36,11 +36,13 @@ client_key = os.getcwd() + '/clients/' + args.client + '/securesysClient.key'
 
 #Bundle data together and determine what flags were passed to execute the respective code
 if args.check_in != defaultArg:
+    curr_time_seconds = int(round(time.time()))
     data={'client':args.client, 'file':args.check_in, 'sec_flag':args.sec_flag}
     r = requests.get("http://localhost:5000/check_in", verify = cert_auth_crt, params=data)
     print(r.text)
 
 if args.check_out != defaultArg:
+    curr_time_seconds = int(round(time.time()))
     data={'client':args.client, 'file':args.check_out}
     r = requests.get("http://localhost:5000/check_out", verify = cert_auth_crt, params=data)
     print r.text
@@ -54,7 +56,8 @@ if args.delegate != defaultArg:
     print(r.text)
 
 if args.safe_delete != defaultArg:
-    data={'client':args.client, 'file':args.safe_delete}
+    curr_time_seconds = int(round(time.time()))
+    data={'client':args.client, 'file':args.safe_delete, 'curr_time': curr_time_seconds}
     r = requests.get("http://localhost:5000/safe_delete", verify = cert_auth_crt, params=data)
     print r.text
 

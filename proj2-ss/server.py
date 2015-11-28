@@ -62,6 +62,19 @@ def decrypt_file(key, in_filename, out_filename=None):
 
             outfile.truncate(origsize)
 
+def can_delete(client, file_delete, serverDir, curr_time):
+    with open(serverDir + '.' + file_delete, 'r') as metafile:
+        first_line = metafile.readline()
+        for line in metafile:
+            if '***' in line:
+                parse_del = line.split('***')
+                if parse_del[0] == client or parse_del[0] == 'ALL':
+                    if curr_time <= parse_del[1]:
+                        if 'safedelete' in parse_del[2]:
+                            return True
+    return False
+                    
+            
 def write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation):
     with open(serverDir + '.' + file_delegate, 'r') as metaFile:
         with open(serverDir + '.' + file_delegate + '_tmp', 'w') as metaFileWrite:
@@ -72,7 +85,7 @@ def write_delegation(serverDir, file_delegate, client_delegate, expire_time, per
             for x in range(0, len(parsed_first_line)-1):
                 first_line+=parsed_first_line[x]+'***'
                     
-                first_line+='YES'
+                first_line+='YES\n'
                 metaFileWrite.write(first_line)
                 for line in metaFile:
                     metaFileWrite.write(line)
@@ -194,25 +207,32 @@ def check_out():
 def safe_delete():
     client = request.args.get('client')
     file_delete = request.args.get('file')
+    curr_time = request.args.get('curr_time')
     serverDir = os.getcwd() + '/server/files/'
     clientDir = os.getcwd() + '/clients/' + client + '/files/'
+    
     if not os.path.isfile(serverDir + file_delete):
         return "File doesn't exist. Try again please."
     else:
         #Check if we're the owner
-        line_counter = 1
         with open(serverDir + '.'+  file_delete, 'r') as metaFile:
-            for line in metaFile:
-                if line_counter == 1:
-                    parsedLine = line.replace('\n','').split('***')
-                    if parsedLine[len(parsedLine)-1] == 'NO' and not parsedLine[0] == client:
-                        return 'Sorry. You do not have permissions to access this file.'
-                    elif parsedLine[0] == client:
-                        os.remove(serverDir + file_delete)
-                        os.remove(serverDir + '.' + file_delete)
-                        return 'File deleted from server'
-                    else: #We check our delegations
-                        return 'safe'
+            line = metaFile.readline().replace('\n','')
+            parsedLine = line.replace('\n','').split('***')
+            if parsedLine[len(parsedLine)-1] == 'NO' and not parsedLine[0] == client:
+                return 'Sorry. You do not have permissions to access this file.'
+            elif parsedLine[0] == client:
+                os.remove(serverDir + file_delete)
+                os.remove(serverDir + '.' + file_delete)
+                return 'File deleted from server'
+            else: #We check our delegations
+                metaFile.close()
+                canDel = can_delete(client, file_delete, serverDir, curr_time)
+                if canDel:
+                    os.remove(serverDir + file_delete)
+                    os.remove(serverDir + '.' + file_delete)
+                    return 'File deleted from server'
+                else:
+                    return 'Permission denied. You dont have access to delete this file.'
 
 @app.route('/delegate')
 def delegate():
@@ -240,7 +260,7 @@ def delegate():
         return "You must delegate to a client that currently exists."
     elif not (permission == 'checkin' or permission == 'checkout' or permission == 'checkin|checkout' or permission == 'owner'):
         return "You must delegate either 'checkin', 'checkout', 'checkin|checkout' or 'owner' to a client. You've specificed some odd option. Try again please."
-    elif prop_delegation != 'false':
+    elif prop_delegation != 'false' and prop_delegation != 'true':
         return "You must specific whether a particular client and delegation permissions via true/false."
     else: #Now we know we have all good data, so we construct to insert our delegation into the system
         #Check if we must decrypt first.
@@ -255,7 +275,7 @@ def delegate():
                 return 'Metadata file decrypted, delegation written to file and file re-encrypted.'
         else:
             write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
-            return 'Delegation written to file ' + file_delegate
+            return 'Delegation written to file  .' + file_delegate
 
 #Execute server and take requests
 if __name__ == '__main__':
