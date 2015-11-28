@@ -74,7 +74,19 @@ def can_delete(client, file_delete, serverDir, curr_time):
                             return True
     return False
                     
-            
+def can_delegate(client, serverDir, file_delegate, permission, curr_time):
+    with open(serverDir + '.' + file_delete, 'r') as metafile:
+        first_line = metafile.readline()
+        for line in metafile:
+            if '***' in line:
+                parse_del = line.split('***')
+                if parse_del[0] == client or parse_del[0] == 'ALL':
+                    if curr_time <= parse_del[1]:
+                        if parse_del[3] == 'true':
+                            if permission in parse_del[2] or permission == 'owner':
+                                return True
+    return False
+    
 def write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation):
     with open(serverDir + '.' + file_delegate, 'r') as metaFile:
         with open(serverDir + '.' + file_delegate + '_tmp', 'w') as metaFileWrite:
@@ -265,21 +277,46 @@ def delegate():
         return "You must delegate either 'checkin', 'checkout', 'checkin|checkout' or 'owner' to a client. You've specificed some odd option. Try again please."
     elif prop_delegation != 'false' and prop_delegation != 'true':
         return "You must specific whether a particular client and delegation permissions via true/false."
-    else: #Now we know we have all good data, so we construct to insert our delegation into the system
-        #Check if we must decrypt first.
-        expire_time = curr_time + time_delegation
-        if '.' in file_delegate:
-            fileExten=file_delegate.spilt('.')
-            if fileExten[1] == 'enc':
-                #We decrypt first and then insert data and then re-encrypt
-                print 'decrypt here'
-                write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
-                print 're-encrypt here'
-                return 'Metadata file decrypted, delegation written to file and file re-encrypted.'
-        else:
-            write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
-            return 'Delegation written to file  .' + file_delegate
+    else: #Now we know we have all good data, so we insert our delegation into the system
+        #First we check if the file is encrypted and decrypt it if it is.
+        if '.enc' in file_delegate:
+            #decrypt it and check if we own it
+            isOwner = ''
+            with open(serverDir + '.' + file_delegate, 'r') as meta:
+                firstLine = meta.readline()
+                isOwner = firstline[0]    
+                expire_time = curr_time + time_delegation
+                if isOwner == client:#We own it
+                    write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
+                    #RE-ENCRYPT HERE
+                    return 'Metadata file decrypted, delegation written to file and file re-encrypted.'
+                else: #We don't own it, check if we can delegate
+                    canDelegate = can_delegate(client, serverDir, file_delegate permission, curr_time)
+                    if canDelegate: #We can delegate!
+                        write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
+                        #RE-ENCRYPT HERE
+                        return 'Metadata file decrypted, delegation written to file and file re-encrypted.'
+                    else: #We cannot delegate.
+                        return 'Permission denied, you cannot delegate.'
+        else:#The file is not encrypted
+            isOwner = ''
+            with open(serverDir + '.' + file_delegate, 'r') as meta:
+                firstLine = meta.readline()
+                isOwner = firstline[0]    
+                expire_time = curr_time + time_delegation
+                if isOwner == client:#We own it
+                    write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)            
+                    return 'Delegation written to file  .' + file_delegate
+                else: #We don't own it, check if we can delegate
+                    canDelegate = can_delegate(client, serverDir, file_delegate permission, curr_time)
+                    if canDelegate: #We can delegate!
+                        write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
+                        return 'Delegation written to file  .' + file_delegate
+                    else: #We cannot delegate.
+                        return 'Permission denied, you cannot delegate.'
 
+            
+            
 #Execute server and take requests
 if __name__ == '__main__':
     app.run()
