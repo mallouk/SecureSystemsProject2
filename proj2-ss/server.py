@@ -42,6 +42,7 @@ def encrypt_file(key, in_filename):
 
 #Method to decrypt file, given a key, ciphertext file, and the name of what the file should be called, this method should return a decrypted version of a file.
 def decrypt_file(key, in_filename, out_filename=None):
+    return None
     chunksize = 24*1024
     if not out_filename:
         out_filename = os.path.splitext(in_filename)[0]
@@ -86,7 +87,7 @@ def process_check_out(serverDir, clientDir, fileCheckIn, first_line):
             return 'File has been modified in transit. Transfer aborted.'
     elif '.enc' in fileCheckIn: #If we've only encrypted
         decrypt_file(key_or_hash, serverDir + fileCheckIn, clientDir + fileExten[0])
-        return 'File decrypted and sent back to the client: ' + client
+        return 'File decrypted and sent back to the client'
     elif '.sign' in fileCheckIn: #Verify signature
         signVer = verify_signature(serverDir, fileCheckIn, first_line[1])
         if signVer: #If signature matches
@@ -96,10 +97,10 @@ def process_check_out(serverDir, clientDir, fileCheckIn, first_line):
             return 'File has been modified in transit. Transfer aborted.'
     else:#If we a sec flag of NONE
         shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
-        return 'Signature checked with a match confirmed. File sent to client.'
+        return 'File sent to client.'
 
 
-def can_check_out(client, serverDir, fileCheckIn):
+def can_check_out(client, serverDir, fileCheckIn, curr_time):
     with open(serverDir + '.' + fileCheckIn, 'r') as metafile:
         first_line = metafile.readline()
         for line in metafile:
@@ -145,17 +146,16 @@ def write_delegation(serverDir, file_delegate, client_delegate, expire_time, per
             
             for x in range(0, len(parsed_first_line)-1):
                 first_line+=parsed_first_line[x]+'***'
-                    
-                first_line+='YES\n'
-                metaFileWrite.write(first_line)
-                for line in metaFile:
-                    metaFileWrite.write(line + '\n')
+            first_line+='YES'
+            metaFileWrite.write(first_line)
+            for line in metaFile:
+                metaFileWrite.write(line)
 
-                metaFileWrite.write(client_delegate + '***' + str(expire_time) + '***' + permission + '***' + prop_delegation)
-                metaFileWrite.close()
-                metaFile.close()
-                os.remove(serverDir + '.' + file_delegate)
-                os.rename(serverDir + '.' + file_delegate + '_tmp', serverDir + '.' + file_delegate)
+            metaFileWrite.write('\n'+client_delegate + '***' + str(expire_time) + '***' + permission + '***' + prop_delegation)
+            metaFileWrite.close()
+            metaFile.close()
+            os.remove(serverDir + '.' + file_delegate)
+            os.rename(serverDir + '.' + file_delegate + '_tmp', serverDir + '.' + file_delegate)
             
 #Check in method used 
 @app.route("/check_in")
@@ -249,7 +249,8 @@ def check_out():
                 if first_line[len(first_line)-1] == 'NO':
                     return "Sorry. You do not have permissions to access this file."
                 else:
-                    canCheckOut = can_check_out(client, serverDir, fileCheckIn)
+                    canCheckOut = can_check_out(client, serverDir, fileCheckIn, curr_time)
+
                     if canCheckOut:
                         retVal = process_check_out(serverDir, clientDir, fileCheckIn, first_line)
                         return retVal
@@ -320,8 +321,8 @@ def delegate():
         return "You can't assign someone a delegation of negative or zero time."
     elif (not os.path.isdir(clientDir_delegate)) and  client_delegate != 'ALL':
         return "You must delegate to a client that currently exists."
-    elif not (permission == 'checkin' or permission == 'checkout' or permission == 'checkin|checkout' or permission == 'owner' or permission == 'safedelete' or permission == 'safedelete|checkin' or permission == 'safedelete|checkout'):
-        return "You must delegate either 'checkin', 'checkout', 'checkin|checkout' or 'owner' to a client. You've specificed some odd option. Try again please."
+    elif not (permission == 'checkin' or permission == 'checkout' or permission == 'checkin+checkout' or permission == 'owner' or permission == 'safedelete' or permission == 'checkin+safedelete' or permission == 'checkout+safedelete'):
+        return "You must delegate either 'checkin', 'checkout', 'checkin+checkout', 'safedelete', 'checkin+safedelete', or 'checkout+safedelete' or 'owner' to a client. You've specificed some odd option. Try again please."
     elif prop_delegation != 'false' and prop_delegation != 'true':
         return "You must specific whether a particular client and delegation permissions via true/false."
     else: #Now we know we have all good data, so we insert our delegation into the system
