@@ -278,7 +278,7 @@ def delegate():
         return "You can't delegate permissions to yourself as you're already an owner."
     elif time_delegation <= 0:
         return "You can't assign someone a delegation of negative or zero time."
-    elif (not os.path.isdir(clientDir_delegate)) or clientDir_delegate == 'ALL':
+    elif (not os.path.isdir(clientDir_delegate)) and  client_delegate != 'ALL':
         return "You must delegate to a client that currently exists."
     elif not (permission == 'checkin' or permission == 'checkout' or permission == 'checkin|checkout' or permission == 'owner' or permission == 'safedelete' or permission == 'safedelete|checkin' or permission == 'safedelete|checkout'):
         return "You must delegate either 'checkin', 'checkout', 'checkin|checkout' or 'owner' to a client. You've specificed some odd option. Try again please."
