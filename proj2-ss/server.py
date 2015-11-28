@@ -103,7 +103,8 @@ def check_in():
     client = request.args.get('client')
     fileCheckIn = request.args.get('file')
     fileSecFlag = request.args.get('sec_flag')
-
+    curr_time = request.args.get('curr_time')
+    
     #Sanitize and get absolute dirs for files
     fullPathFile = os.getcwd()+ '/clients/' + client + '/files/' + fileCheckIn
     serverDir = os.getcwd() + '/server/files/'
@@ -162,6 +163,8 @@ def check_in():
 def check_out():
     client = request.args.get('client')
     fileCheckIn = request.args.get('file')
+    curr_time = request.args.get('curr_time')
+    
     serverDir = os.getcwd() + '/server/files/'
     clientDir = os.getcwd() + '/clients/' + client + '/files/'
     if not os.path.isfile(serverDir + fileCheckIn):
@@ -258,7 +261,7 @@ def delegate():
         return "You can't assign someone a delegation of negative or zero time."
     elif (not os.path.isdir(clientDir_delegate)) or clientDir_delegate == 'ALL':
         return "You must delegate to a client that currently exists."
-    elif not (permission == 'checkin' or permission == 'checkout' or permission == 'checkin|checkout' or permission == 'owner'):
+    elif not (permission == 'checkin' or permission == 'checkout' or permission == 'checkin|checkout' or permission == 'owner' or permission == 'safedelete' or permission == 'safedelete|checkin' or permission == 'safedelete|checkout'):
         return "You must delegate either 'checkin', 'checkout', 'checkin|checkout' or 'owner' to a client. You've specificed some odd option. Try again please."
     elif prop_delegation != 'false' and prop_delegation != 'true':
         return "You must specific whether a particular client and delegation permissions via true/false."
