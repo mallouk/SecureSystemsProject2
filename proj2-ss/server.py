@@ -291,7 +291,7 @@ def delegate():
                     #RE-ENCRYPT HERE
                     return 'Metadata file decrypted, delegation written to file and file re-encrypted.'
                 else: #We don't own it, check if we can delegate
-                    canDelegate = can_delegate(client, serverDir, file_delegate permission, curr_time)
+                    canDelegate = can_delegate(client, serverDir, file_delegate, permission, curr_time)
                     if canDelegate: #We can delegate!
                         write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
                         #RE-ENCRYPT HERE
@@ -308,15 +308,13 @@ def delegate():
                     write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)            
                     return 'Delegation written to file  .' + file_delegate
                 else: #We don't own it, check if we can delegate
-                    canDelegate = can_delegate(client, serverDir, file_delegate permission, curr_time)
+                    canDelegate = can_delegate(client, serverDir, file_delegate, permission, curr_time)
                     if canDelegate: #We can delegate!
                         write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
                         return 'Delegation written to file  .' + file_delegate
                     else: #We cannot delegate.
                         return 'Permission denied, you cannot delegate.'
 
-            
-            
-#Execute server and take requests
+ #Execute server and take requests
 if __name__ == '__main__':
     app.run()
