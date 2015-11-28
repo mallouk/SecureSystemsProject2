@@ -225,7 +225,7 @@ def safe_delete():
     curr_time = request.args.get('curr_time')
     serverDir = os.getcwd() + '/server/files/'
     clientDir = os.getcwd() + '/clients/' + client + '/files/'
-    
+
     if not os.path.isfile(serverDir + file_delete):
         return "File doesn't exist. Try again please."
     else:
@@ -235,7 +235,7 @@ def safe_delete():
             print 'decrypt!'
         #Check if we're the owner
         isOwner = ''
-        with open(serverDir + '.' + file_delegate, 'r') as meta:
+        with open(serverDir + '.' + file_delete, 'r') as meta:
             firstLine = meta.readline()
             first_line = firstLine.split('***')
             isOwner = first_line[0]
@@ -244,7 +244,7 @@ def safe_delete():
                 os.remove(serverDir + '.' + file_delete)
                 return 'File deleted from server'
             else: #We don't own it
-                if first_line[len(parsedLine)-1] == 'NO':
+                if first_line[len(first_line)-1] == 'NO':
                     return "Sorry. You do not have permissions to access this file."
                 else:
                     canDelete = can_delete(client, file_delete, serverDir, curr_time)
