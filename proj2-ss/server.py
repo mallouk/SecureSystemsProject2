@@ -100,9 +100,9 @@ def write_delegation(serverDir, file_delegate, client_delegate, expire_time, per
                 first_line+='YES\n'
                 metaFileWrite.write(first_line)
                 for line in metaFile:
-                    metaFileWrite.write(line)
+                    metaFileWrite.write(line + '\n')
 
-                metaFileWrite.write('\n' + client_delegate + '***' + str(expire_time) + '***' + permission + '***' + prop_delegation)
+                metaFileWrite.write(client_delegate + '***' + str(expire_time) + '***' + permission + '***' + prop_delegation)
                 metaFileWrite.close()
                 metaFile.close()
                 os.remove(serverDir + '.' + file_delegate)
@@ -229,26 +229,33 @@ def safe_delete():
     if not os.path.isfile(serverDir + file_delete):
         return "File doesn't exist. Try again please."
     else:
+        #Check if file is encrypted first
+        if '.enc' in file_delete:
+            #DECRYPT FIRST
+            print 'decrypt!'
         #Check if we're the owner
-        with open(serverDir + '.'+  file_delete, 'r') as metaFile:
-            line = metaFile.readline().replace('\n','')
-            parsedLine = line.replace('\n','').split('***')
-            if parsedLine[len(parsedLine)-1] == 'NO' and not parsedLine[0] == client:
-                return 'Sorry. You do not have permissions to access this file.'
-            elif parsedLine[0] == client:
+        isOwner = ''
+        with open(serverDir + '.' + file_delegate, 'r') as meta:
+            firstLine = meta.readline()
+            first_line = firstLine.split('***')
+            isOwner = first_line[0]
+            if isOwner == client: #We own it
                 os.remove(serverDir + file_delete)
                 os.remove(serverDir + '.' + file_delete)
                 return 'File deleted from server'
-            else: #We check our delegations
-                metaFile.close()
-                canDel = can_delete(client, file_delete, serverDir, curr_time)
-                if canDel:
-                    os.remove(serverDir + file_delete)
-                    os.remove(serverDir + '.' + file_delete)
-                    return 'File deleted from server'
+            else: #We don't own it
+                if first_line[len(parsedLine)-1] == 'NO':
+                    return "Sorry. You do not have permissions to access this file."
                 else:
-                    return 'Permission denied. You dont have access to delete this file.'
+                    canDelete = can_delete(client, file_delete, serverDir, curr_time)
+                    if canDelete:
+                        os.remove(serverDir + file_delete)
+                        os.remove(serverDir + '.' + file_delete)
+                        return 'File deleted from server'
+                    else:
+                        return "Sorry. You do not have permissions to access this file."
 
+    
 @app.route('/delegate')
 def delegate():
     client = request.args.get('client')
@@ -284,7 +291,8 @@ def delegate():
             isOwner = ''
             with open(serverDir + '.' + file_delegate, 'r') as meta:
                 firstLine = meta.readline()
-                isOwner = firstline[0]    
+                first_line = firstLine.split('***')
+                isOwner = first_line[0]    
                 expire_time = curr_time + time_delegation
                 if isOwner == client:#We own it
                     write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
