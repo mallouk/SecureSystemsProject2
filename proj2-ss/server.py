@@ -75,7 +75,7 @@ def can_delete(client, file_delete, serverDir, curr_time):
     return False
                     
 def can_delegate(client, serverDir, file_delegate, permission, curr_time):
-    with open(serverDir + '.' + file_delete, 'r') as metafile:
+    with open(serverDir + '.' + file_delegate, 'r') as metafile:
         first_line = metafile.readline()
         for line in metafile:
             if '***' in line:
@@ -310,7 +310,8 @@ def delegate():
             isOwner = ''
             with open(serverDir + '.' + file_delegate, 'r') as meta:
                 firstLine = meta.readline()
-                isOwner = firstline[0]    
+                first_line = firstLine.split('***')
+                isOwner = first_line[0]    
                 expire_time = curr_time + time_delegation
                 if isOwner == client:#We own it
                     write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)            
