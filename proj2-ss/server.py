@@ -233,6 +233,7 @@ def safe_delete():
         if '.enc' in file_delete:
             #DECRYPT FIRST
             print 'decrypt!'
+
         #Check if we're the owner
         isOwner = ''
         with open(serverDir + '.' + file_delete, 'r') as meta:
