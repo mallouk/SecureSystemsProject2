@@ -62,6 +62,55 @@ def decrypt_file(key, in_filename, out_filename=None):
 
             outfile.truncate(origsize)
 
+def verify_signature(serverDir, fileCheckIn, origin_hash):
+    message = ''
+    with open(serverDir + fileCheckIn) as myfile:
+        message = myfile.read().replace('\n', '')
+        
+        hash_sha2 = hashlib.sha256(message).hexdigest()
+        if (hash_sha2 == origin_hash):
+            return True
+        else:
+            return False
+
+def process_check_out(serverDir, clientDir, fileCheckIn, first_line):
+    fileExten=fileCheckIn.split('.')
+    key_or_hash = first_line[1]
+    if '.enc' in fileCheckIn and '.sign' in fileCheckIn: #We decrypt and verify signature
+        decrypt_file(key_or_hash, serverDir + fileCheckIn, serverDir + fileCheckIn)
+        signVer = verify_signature(serverDir, fileCheckIn, first_line[2])
+        if signVer: #If signature matches
+            shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
+            return 'File decrypted and signature checked with a match confirmed. File sent to client.'
+        else: #If signature doesn't match
+            return 'File has been modified in transit. Transfer aborted.'
+    else if '.enc' in fileCheckIn: #If we've only encrypted
+        decrypt_file(key_or_hash, serverDir + fileCheckIn, clientDir + fileExten[0])
+        return 'File decrypted and sent back to the client: ' + client
+    else if '.sign' in fileCheckIn: #Verify signature
+        signVer = verify_signature(serverDir, fileCheckIn, first_line[1])
+        if signVer: #If signature matches
+            shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
+            return 'Signature checked with a match confirmed. File sent to client.'
+        else: #If signature doesn't match
+            return 'File has been modified in transit. Transfer aborted.'
+    else:#If we a sec flag of NONE
+        shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
+        return 'Signature checked with a match confirmed. File sent to client.'
+
+
+def can_check_out(client, serverDir, fileCheckIn):
+    with open(serverDir + '.' + fileCheckIn 'r') as metafile:
+        first_line = metafile.readline()
+        for line in metafile:
+            if '***' in line:
+                parse_out = line.split('***')
+                if parse_out[0] == client or parse_out[0] == 'ALL':
+                    if curr_time <= parse_out[1]:
+                        if 'checkout' in parse_out[2]:
+                            return True
+    return False
+
 def can_delete(client, file_delete, serverDir, curr_time):
     with open(serverDir + '.' + file_delete, 'r') as metafile:
         first_line = metafile.readline()
@@ -182,41 +231,30 @@ def check_out():
     if not os.path.isfile(serverDir + fileCheckIn):
         return "File doesn't exist. Try again please."
     else:
+        #File exists, let's check if it's encrypted
+        if '.enc' in fileCheckIn:
+            #Decrypt meta file
+            
         #Check if we're the owner
-        line_counter = 1
-        with open(serverDir + '.'+  fileCheckIn, 'r') as metaFile:
-            for line in metaFile:
-                if line_counter == 1:
-                    parsedLine = line.replace('\n','').split('***')
-                    if parsedLine[len(parsedLine)-1] == 'NO' and not parsedLine[0] == client:
-                        return 'Sorry. You do not have permissions to access this file.'
-                    elif parsedLine[0] == client:
-                        #We check to see if we're scanning a NONE sec_flag metadata file, and if we are, we just send the data back. Otherwise, we may have to check hashes or decrypt the file.
-                        if len(parsedLine) == 2:
-                            shutil.copy(serverDir + fileCheckIn, clientDir)
-                            return 'File copied from server to client: ' + client
-                        else:
-                            fileExten=fileCheckIn.split('.')
-                            key_or_hash = parsedLine[1]
-                            #If file is .enc then we need to decrypt, else check signature
-                            if fileExten[1] == 'enc':
-                                decrypt_file(key_or_hash, serverDir + fileCheckIn, clientDir + fileExten[0])
-                                return 'File decrypted and sent back to the client: ' + client
-                            #Since our file isn't enc it is sign and therefore under the INTEGRITY flag.
-                            else:
-                                message = ''
-                                with open(serverDir + fileCheckIn) as myfile:
-                                    message = myfile.read().replace('\n', '')
-
-                                hash_sha2 = hashlib.sha256(message).hexdigest()
-                                if (hash_sha2 == parsedLine[1]):
-                                    shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
-                                    return 'File signatured checked and match confirmed. File sent to client: ' + client
-                                else:
-                                    return 'File signatured checked with no match. File transfered aborted.'
-                    else: #If we have a delegation flag of 'YES' and we aren't the owner, execute this.
-                        return 'Will handle delegation'
-    return 'check_out'
+        isOwner = ''
+        with open(serverDir + '.' + fileCheckIn, 'r') as meta:
+            firstLine = meta.readline()
+            first_line = firstLine.split('***')
+            isOwner = first_line[0]
+            if isOwner == client: #We own it
+                #We check again if the file is encrypted
+                retVal = process_check_out(serverDir, clientDir, fileCheckIn, first_line)
+                return retVal
+            else: #We do not own the file, check for delegations
+                if first_line[len(first_line)-1] == 'NO':
+                    return "Sorry. You do not have permissions to access this file."
+                else:
+                    canCheckOut = can_check_out(client, serverDir, fileCheckIn)
+                    if canCheckOut:
+                        retVal = process_check_out(serverDir, clientDir, fileCheckIn, first_line)
+                        return retVal
+                    else:
+                        return 'Sorry. You do not have permissions to check out this file.'
 
 @app.route('/safe_delete')
 def safe_delete():
@@ -273,6 +311,7 @@ def delegate():
     serverDir = os.getcwd() + '/server/files/'
     clientDir = os.getcwd() + '/clients/' + client + '/files/'
     clientDir_delegate = os.getcwd() + '/clients/' + client_delegate + '/files/'
+    #Do some error checking
     if not os.path.isfile(serverDir + file_delegate):
         return "File doesn't exist. Try again please."
     elif client == client_delegate:
