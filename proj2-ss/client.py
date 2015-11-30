@@ -17,6 +17,7 @@ parser.add_argument('--check_out', action='store')
 parser.add_argument('--sec_flag', action='store')
 parser.add_argument('--delegate', action='store', nargs=5)
 parser.add_argument('--safe_delete', action='store')
+parser.add_argument('--output', action='store')
 
 #Parse the args and place them in a var. We create the directory paths to wherever our certs and keys are for referencing.
 args = parser.parse_args();
@@ -43,7 +44,7 @@ if args.check_in != defaultArg:
 
 if args.check_out != defaultArg:
     curr_time_seconds = int(round(time.time()))
-    data={'client':args.client, 'file':args.check_out, 'curr_time':curr_time_seconds}
+    data={'client':args.client, 'file':args.check_out, 'output':args.output,'curr_time':curr_time_seconds}
     r = requests.get("http://localhost:5000/check_out", verify = cert_auth_crt, params=data)
     print r.text
 

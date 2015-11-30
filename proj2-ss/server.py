@@ -74,29 +74,29 @@ def verify_signature(serverDir, fileCheckIn, origin_hash):
         else:
             return False
 
-def process_check_out(serverDir, clientDir, fileCheckIn, first_line):
+def process_check_out(serverDir, clientDir, fileCheckIn, filename_output, first_line):
     fileExten=fileCheckIn.split('.')
     key_or_hash = first_line[1]
     if '.enc' in fileCheckIn and '.sign' in fileCheckIn: #We decrypt and verify signature
         decrypt_file(key_or_hash, serverDir + fileCheckIn, serverDir + fileCheckIn)
         signVer = verify_signature(serverDir, fileCheckIn, first_line[2])
         if signVer: #If signature matches
-            shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
+            shutil.copyfile(serverDir + fileCheckIn, clientDir + filename_output)
             return 'File decrypted and signature checked with a match confirmed. File sent to client.'
         else: #If signature doesn't match
             return 'File has been modified in transit. Transfer aborted.'
     elif '.enc' in fileCheckIn: #If we've only encrypted
-        decrypt_file(key_or_hash, serverDir + fileCheckIn, clientDir + fileExten[0])
+        decrypt_file(key_or_hash, serverDir + fileCheckIn, clientDir + filename_output)
         return 'File decrypted and sent back to the client'
     elif '.sign' in fileCheckIn: #Verify signature
         signVer = verify_signature(serverDir, fileCheckIn, first_line[1])
         if signVer: #If signature matches
-            shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
+            shutil.copyfile(serverDir + fileCheckIn, clientDir + filename_output)
             return 'Signature checked with a match confirmed. File sent to client.'
         else: #If signature doesn't match
             return 'File has been modified in transit. Transfer aborted.'
     else:#If we a sec flag of NONE
-        shutil.copyfile(serverDir + fileCheckIn, clientDir + fileExten[0])
+        shutil.copyfile(serverDir + fileCheckIn, clientDir + filename_output)
         return 'File sent to client.'
 
 
@@ -224,8 +224,12 @@ def check_in():
 def check_out():
     client = request.args.get('client')
     fileCheckIn = request.args.get('file')
+    filename_output = request.args.get('output')
     curr_time = request.args.get('curr_time')
-    
+
+    if filename_output == 'NO_ARG_PASSED':
+        filename_output = fileCheckIn
+
     serverDir = os.getcwd() + '/server/files/'
     clientDir = os.getcwd() + '/clients/' + client + '/files/'
     if not os.path.isfile(serverDir + fileCheckIn):
@@ -243,7 +247,7 @@ def check_out():
             isOwner = first_line[0]
             if isOwner == client: #We own it
                 #We check again if the file is encrypted
-                retVal = process_check_out(serverDir, clientDir, fileCheckIn, first_line)
+                retVal = process_check_out(serverDir, clientDir, fileCheckIn, filename_output, first_line)
                 return retVal
             else: #We do not own the file, check for delegations
                 if first_line[len(first_line)-1] == 'NO':
@@ -252,7 +256,7 @@ def check_out():
                     canCheckOut = can_check_out(client, serverDir, fileCheckIn, curr_time)
 
                     if canCheckOut:
-                        retVal = process_check_out(serverDir, clientDir, fileCheckIn, first_line)
+                        retVal = process_check_out(serverDir, clientDir, fileCheckIn, filename_output, first_line)
                         return retVal
                     else:
                         return 'Sorry. You do not have permissions to check out this file.'
