@@ -14,11 +14,17 @@ import time
 app = Flask(__name__)
 
 #Method to encrypt a file. Give it a key and file to encrypt. It will spit back out an encrypted version of said file. 
-def encrypt_file(key, in_filename):
-    out_filename = ''
+def encrypt_file(key, in_filename, exten_checker):
+    out_filename=''
+    exten = ''
+    if exten_checker == '0':
+        exten = '.enc'
+    else:
+        exten = '.enc.sign'
+    
     chunksize=64*1024
     if not out_filename:
-        out_filename = in_filename + '.enc'
+        out_filename = in_filename + exten
 
     #Generate IV, get file size, and encrypting object for AES
     iv = ''.join(chr(random.randint(0, 0xFF)) for i in range(16))
@@ -186,7 +192,7 @@ def check_in():
             filePointer.close()
             
             #Encrypt file and send it to server
-            encrypt_file(randomKey, fullPathFile + '')
+            encrypt_file(randomKey, fullPathFile + '', '0')
             if os.path.isfile(serverDir + fileCheckIn + '.enc'):
                 os.remove(serverDir + fileCheckIn + '.enc')
             shutil.move(fullPathFile + '.enc', serverDir)
@@ -207,6 +213,32 @@ def check_in():
             filePointer.write(dataToFile)
             filePointer.close()
             return 'File signed and sent to server.'
+        elif fileSecFlag == 'CONFIDENTIALITY_INTEGRITY':
+            #Generate enc key
+            randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
+
+            #Enrypt file and send to the server
+            encrypt_file(randomKey, fullPathFile + '', '1')
+
+            if os.path.isfile(serverDir + fileCheckIn + '.enc.sign'):
+                os.remove(serverDir + fileCheckIn + '.enc.sign')
+            shutil.move(fullPathFile + '.enc.sign', serverDir)
+
+            #Read encrypted file and create signature
+            message = ''
+            with open(serverDir + fileCheckIn + '.enc.sign') as myfile:
+                message = myfile.read().replace('\n', '')
+
+            #Generate signature and construct metadata file
+            hash_sha2 = hashlib.sha256(message).hexdigest()
+            filePointer = open(serverDir + '.' + fileCheckIn + '.enc.sign', 'w')
+            delegationFlag = 'NO'
+            dataToFile = client + '***' + randomKey + '***' + hash_sha2 + '***' + delegationFlag
+            filePointer.write(dataToFile)
+            filePointer.close()
+
+            
+            return "File signed, encrypted and sent to server"
         else:
             #Write metadata file
             filePointer = open(serverDir + '.' + fileCheckIn, 'w')
