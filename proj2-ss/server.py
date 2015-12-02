@@ -183,24 +183,25 @@ def write_delegation(serverDir, file_delegate, client_delegate, expire_time, per
     elif os.path.exists(serverDir + '.' + file_delegate):
         metaFile = serverDir + '.' + file_delegate
 
-    with open(metaFile, 'r') as metaFile:
+    with open(metaFile, 'r') as meta:
         with open(serverDir + '.' + file_delegate + '_tmp', 'w') as metaFileWrite:
-            first_line = metaFile.readline().replace('\n','')
+            first_line = meta.readline().replace('\n','')
             parsed_first_line = first_line.split('***')
-            first_line=''
-            
+            first_line = ''
+
             for x in range(0, len(parsed_first_line)-1):
-                first_line+=parsed_first_line[x]+'***'
-            first_line+='YES'
+                first_line += parsed_first_line[x]+'***'
+            first_line += 'YES'
             metaFileWrite.write(first_line)
-            for line in metaFile:
+            for line in meta:
                 metaFileWrite.write(line)
 
             metaFileWrite.write('\n'+client_delegate + '***' + str(expire_time) + '***' + permission + '***' + prop_delegation)
             metaFileWrite.close()
-            metaFile.close()
-            os.remove(serverDir + '.' + file_delegate)
-            os.rename(serverDir + '.' + file_delegate + '_tmp', serverDir + '.' + file_delegate)
+            meta.close()
+            os.remove(metaFile)
+            print "I'm in Write Delegate"
+            os.rename(serverDir + '.' + file_delegate + '_tmp', metaFile)
             
 #Check in method used 
 @app.route("/check_in")
@@ -465,7 +466,7 @@ def delegate():
         return "You must specific whether a particular client and delegation permissions via true/false."
     else: #Now we know we have all good data, so we insert our delegation into the system
         #First we check if the file is encrypted and decrypt it if it is.
-        print "Before Meta Check"
+
         #File exists, let's check if it's encrypted
         if os.path.exists(serverDir + '.' + file_delegate + '.enc.sign'):
             metaFile = serverDir + '.' + file_delegate + '.enc.sign'
@@ -480,6 +481,7 @@ def delegate():
             #decrypt it and check if we own it
             isOwner = ''
             with open(metaFile, 'r') as meta:
+                print "Meta Enc Beginning"
                 firstLine = meta.readline()
                 first_line = firstLine.split('***')
                 isOwner = first_line[0]    
@@ -499,12 +501,13 @@ def delegate():
         else:#The file is not encrypted
             isOwner = ''
             with open(metaFile, 'r') as meta:
+
                 firstLine = meta.readline()
                 first_line = firstLine.split('***')
                 isOwner = first_line[0]    
                 expire_time = curr_time + time_delegation
                 if isOwner == client:#We own it
-                    write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)            
+                    write_delegation(serverDir, file_delegate, client_delegate, expire_time, permission, prop_delegation)
                     return 'Delegation written to file  .' + file_delegate
                 else: #We don't own it, check if we can delegate
                     canDelegate = can_delegate(client, serverDir, file_delegate, permission, curr_time)
