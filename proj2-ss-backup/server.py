@@ -48,7 +48,6 @@ def encrypt_file(key, in_filename, exten_checker):
 
 #Method to decrypt file, given a key, ciphertext file, and the name of what the file should be called, this method should return a decrypted version of a file.
 def decrypt_file(key, in_filename, out_filename=None):
-    return None
     chunksize = 24*1024
     if not out_filename:
         out_filename = os.path.splitext(in_filename)[0]
