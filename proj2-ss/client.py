@@ -33,13 +33,18 @@ cert_auth_crt = os.getcwd() + '/ca/securesysCA.crt'
 server_crt = os.getcwd() + '/server/securesysServer.crt'
 client_crt = os.getcwd() + '/clients/' + args.client + '/securesysClient.crt'
 client_key = os.getcwd() + '/clients/' + args.client + '/securesysClient.key'
+fileData = os.getcwd() + '/clients/' + args.client + '/files/' + args.check_in
 
+if not os.path.isfile(fileData):
+    print "File does not exist. Try again please."
+    exit()
 
 #Bundle data together and determine what flags were passed to execute the respective code
 if args.check_in != defaultArg:
     curr_time_seconds = int(round(time.time()))
     data={'client':args.client, 'file':args.check_in, 'sec_flag':args.sec_flag, 'curr_time':curr_time_seconds}
-    r = requests.get("http://localhost:5000/check_in", verify = cert_auth_crt, params=data)
+    files={'files':open(fileData, 'rb')}
+    r = requests.post("http://localhost:5000/check_in", verify=cert_auth_crt, params=data, files=files)
     print(r.text)
 
 if args.check_out != defaultArg:

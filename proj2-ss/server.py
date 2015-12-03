@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import Flask, request
 from Crypto.Cipher import AES
+from werkzeug import secure_filename
 import os
 import sys
 import requests
@@ -10,8 +11,10 @@ import random
 import struct
 import hashlib
 import time
+UPLOAD_FOLDER = 'server/files'
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 #Method to encrypt a file. Give it a key and file to encrypt. It will spit back out an encrypted version of said file. 
 def encrypt_file(key, in_filename, out_filename=None):
@@ -204,133 +207,143 @@ def write_delegation(serverDir, file_delegate, client_delegate, expire_time, per
             os.rename(serverDir + '.' + file_delegate + '_tmp', metaFile)
             
 #Check in method used 
-@app.route("/check_in")
+@app.route("/check_in", methods=['GET', 'POST'])
 def check_in():
     #Pull in parameters from URL
     client = request.args.get('client')
     fileCheckIn = request.args.get('file')
     fileSecFlag = request.args.get('sec_flag')
     curr_time = request.args.get('curr_time')
+    file = request.files['files']
     
     #Sanitize and get absolute dirs for files
     fullPathFile = os.getcwd() + '/clients/' + client + '/files/' + fileCheckIn
     serverDir = os.getcwd() + '/server/files/'
 
     #If file exists, check the sec flag and transfer file accordiingly. Otherwise, throw an error saying that the file doesn't exist
-    if not os.path.isfile(fullPathFile):
-        return "File doesn't exist. Try again please."
+    #Deal with specific flag options
+    if fileSecFlag == 'CONFIDENTIALITY':
+        #Generate random key used for encryption
+        randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
+        
+        #Remove Previous MetaData Files
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn):
+            os.remove(serverDir + '.' + fileCheckIn)
+
+        #Write owner and  key to a metadata file.....
+        filePointer = open(serverDir + '.' + fileCheckIn + '.enc', 'w')
+        delegationFlag = 'NO'
+        dataToFile = client + '***' + randomKey + '***' + delegationFlag
+        filePointer.write(dataToFile)
+        filePointer.close()
+
+        #Write file to server
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+  
+        #Encrypt file and rewrite it to server
+        encrypt_file(randomKey, serverDir + fileCheckIn + '', serverDir + fileCheckIn)
+        # shutil.move(fullPathFile, serverDir)
+        return 'File encrypted and sent to server.'
+    elif fileSecFlag == 'INTEGRITY':
+        #Write file to server
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        #Get file contents
+        message = ''
+        with open(serverDir + fileCheckIn) as myfile:
+            message = myfile.read().replace('\n', '')
+            #Remove Previous MetaData Files
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn):
+            os.remove(serverDir + '.' + fileCheckIn)
+
+        #Generate signature and construct metadata file
+        hash_sha2 = hashlib.sha256(message).hexdigest()
+        filePointer = open(serverDir + '.' + fileCheckIn + '.sign', 'w')
+        delegationFlag = 'NO'
+        dataToFile = client + '***' + hash_sha2 + '***' + delegationFlag
+        filePointer.write(dataToFile)
+        filePointer.close()
+        return 'File signed and sent to server.'
+    elif fileSecFlag == 'CONFIDENTIALITY_INTEGRITY':
+        #Generate enc key
+        randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
+
+        #Write file to serve
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    
+        #Enrypt file and send to the server
+        encrypt_file(randomKey, serverDir + fileCheckIn, serverDir + fileCheckIn)
+        
+        #Read encrypted file and create signature
+        message = ''
+        with open(serverDir + fileCheckIn) as myfile:
+            message = myfile.read().replace('\n', '')
+
+        #Remove Previous MetaData Files
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn):
+            os.remove(serverDir + '.' + fileCheckIn)
+
+        #Generate signature and construct metadata file
+        hash_sha2 = hashlib.sha256(message).hexdigest()
+        filePointer = open(serverDir + '.' + fileCheckIn + '.enc.sign', 'w')
+        delegationFlag = 'NO'
+        dataToFile = client + '***' + randomKey + '***' + hash_sha2 + '***' + delegationFlag
+        filePointer.write(dataToFile)
+        filePointer.close()
+
+            
+        return "File signed, encrypted and sent to server"
     else:
-        #Deal with specific flag options
-        if fileSecFlag == 'CONFIDENTIALITY':
-            #Generate random key used for encryption
-            randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
+        #Remove Previous MetaData Files
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn):
+            os.remove(serverDir + '.' + fileCheckIn)
 
-            #Remove Previous MetaData Files
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
-                os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
-                os.remove(serverDir + '.' + fileCheckIn + '.enc')
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
-                os.remove(serverDir + '.' + fileCheckIn + '.sign')
-            if os.path.exists(serverDir + '.' + fileCheckIn):
-                os.remove(serverDir + '.' + fileCheckIn)
+        #Write file to serve
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    
 
-            #Write owner and  key to a metadata file.....
-            filePointer = open(serverDir + '.' + fileCheckIn + '.enc', 'w')
-            delegationFlag = 'NO'
-            dataToFile = client + '***' + randomKey + '***' + delegationFlag
-            filePointer.write(dataToFile)
-            filePointer.close()
-            
-            #Encrypt file and send it to server
-            if os.path.isfile(serverDir + fileCheckIn):
-                os.remove(serverDir + fileCheckIn)
-            encrypt_file(randomKey, fullPathFile + '', serverDir + fileCheckIn)
-            # shutil.move(fullPathFile, serverDir)
-            return 'File encrypted and sent to server.'
-        elif fileSecFlag == 'INTEGRITY':
-            #Write file to server
-            shutil.copyfile(fullPathFile, serverDir + fileCheckIn)
-            #Get file contents
-            message = ''
-            with open(serverDir + fileCheckIn) as myfile:
-                message = myfile.read().replace('\n', '')
-            #Remove Previous MetaData Files
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
-                os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
-                os.remove(serverDir + '.' + fileCheckIn + '.enc')
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
-                os.remove(serverDir + '.' + fileCheckIn + '.sign')
-            if os.path.exists(serverDir + '.' + fileCheckIn):
-                os.remove(serverDir + '.' + fileCheckIn)
-
-            #Generate signature and construct metadata file
-            hash_sha2 = hashlib.sha256(message).hexdigest()
-            filePointer = open(serverDir + '.' + fileCheckIn + '.sign', 'w')
-            delegationFlag = 'NO'
-            dataToFile = client + '***' + hash_sha2 + '***' + delegationFlag
-            filePointer.write(dataToFile)
-            filePointer.close()
-            return 'File signed and sent to server.'
-        elif fileSecFlag == 'CONFIDENTIALITY_INTEGRITY':
-            #Generate enc key
-            randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
-
-            #Enrypt file and send to the server
-            encrypt_file(randomKey, fullPathFile + '', serverDir + fileCheckIn)
-
-            # if os.path.isfile(serverDir + fileCheckIn):
-            #     os.remove(serverDir + fileCheckIn)
-            # shutil.move(fullPathFile, serverDir)
-
-            #Read encrypted file and create signature
-            message = ''
-            with open(serverDir + fileCheckIn) as myfile:
-                message = myfile.read().replace('\n', '')
-
-            #Remove Previous MetaData Files
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
-                os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
-                os.remove(serverDir + '.' + fileCheckIn + '.enc')
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
-                os.remove(serverDir + '.' + fileCheckIn + '.sign')
-            if os.path.exists(serverDir + '.' + fileCheckIn):
-                os.remove(serverDir + '.' + fileCheckIn)
-
-            #Generate signature and construct metadata file
-            hash_sha2 = hashlib.sha256(message).hexdigest()
-            filePointer = open(serverDir + '.' + fileCheckIn + '.enc.sign', 'w')
-            delegationFlag = 'NO'
-            dataToFile = client + '***' + randomKey + '***' + hash_sha2 + '***' + delegationFlag
-            filePointer.write(dataToFile)
-            filePointer.close()
-
-            
-            return "File signed, encrypted and sent to server"
-        else:
-            #Remove Previous MetaData Files
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
-                os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
-                os.remove(serverDir + '.' + fileCheckIn + '.enc')
-            if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
-                os.remove(serverDir + '.' + fileCheckIn + '.sign')
-            if os.path.exists(serverDir + '.' + fileCheckIn):
-                os.remove(serverDir + '.' + fileCheckIn)
-
-
-            #Write metadata file
-            filePointer = open(serverDir + '.' + fileCheckIn, 'w')
-            delegationFlag = 'NO'
-            dataToFile = client + '***' + delegationFlag
-            filePointer.write(dataToFile)
-            filePointer.close()
-            
-            #Send actual file to server
-            shutil.copy(fullPathFile, serverDir)
-            return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
+        #Write metadata file
+        filePointer = open(serverDir + '.' + fileCheckIn, 'w')
+        delegationFlag = 'NO'
+        dataToFile = client + '***' + delegationFlag
+        filePointer.write(dataToFile)
+        filePointer.close()
+        
+        #Send actual file to server
+        shutil.copy(fullPathFile, serverDir)
+        return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
 
 #Checkout method
 @app.route("/check_out")
@@ -396,7 +409,6 @@ def safe_delete():
     if not os.path.isfile(serverDir + file_delete):
         return "File doesn't exist. Try again please."
     else:
-
         #File exists, let's check if it's encrypted
         if os.path.exists(serverDir + '.' + file_delete + '.enc.sign'):
             metaFile = serverDir + '.' + file_delete + '.enc.sign'
