@@ -477,7 +477,7 @@ def safe_delete():
                     canDelete = can_delete(client, file_delete, serverDir, curr_time)
                     if canDelete:
                         os.system('shred -fu ' + serverDir + file_delete)
-                        os.system('shred -fu ' + metaData)
+                        os.system('shred -fu ' + metaFile)
                         return 'File deleted from server'
                     else:
                         return "Sorry. You do not have permissions to access this file."
