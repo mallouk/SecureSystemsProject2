@@ -52,6 +52,7 @@ if args.check_out != defaultArg:
     data={'client':args.client, 'file':args.check_out, 'output':args.output,'curr_time':curr_time_seconds}
     r = requests.get("http://localhost:5000/check_out", verify = cert_auth_crt, params=data)
     print r.status_code
+    print r.headers
     if r.status_code == 200:
         fileTest = r.text
         writer = open(clientDir + args.output, 'w')
