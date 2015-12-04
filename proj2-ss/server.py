@@ -90,7 +90,6 @@ def process_check_out(serverDir, clientDir, fileCheckIn, filename_output, first_
         print key_or_hash
         decrypt_file(key_or_hash, serverDir + fileCheckIn, serverDir + fileCheckIn + '.tmp')
         signVer = verify_signature(serverDir, fileCheckIn, first_line[2])
-        # os.rename(serverDir + fileCheckIn + '.tmp', serverDir + fileCheckIn)
         @after_this_request
         def remove_file(response):
             os.remove(serverDir + fileCheckIn + '.tmp')
@@ -150,7 +149,7 @@ def can_check_in(client, serverDir, fileCheckIn, curr_time):
                 parse_out = line.split('***')
                 if parse_out[0] == client or parse_out[0] == 'ALL':
                     if curr_time <= parse_out[1]:
-                        if 'checkout' in parse_out[2]:
+                        if 'checkin' in parse_out[2]:
                             return True
     return False
     
@@ -253,7 +252,8 @@ def write_delegation(serverDir, file_delegate, client_delegate, expire_time, per
             os.rename(serverDir + '.' + file_delegate + '_tmp', metaFile)
 
 
-def process_check_in(serverDir, fileCheckIn, client, fileSecFlag):
+def process_check_in(serverDir, fileCheckIn, client, fileSecFlag, file):
+    print 'process checkin'
     #Deal with specific flag options
     if fileSecFlag == 'CONFIDENTIALITY':
         #Generate random key used for encryption
@@ -284,8 +284,7 @@ def process_check_in(serverDir, fileCheckIn, client, fileSecFlag):
         #Encrypt file and rewrite it to server
         encrypt_file(randomKey, serverDir + fileCheckIn + '', serverDir + fileCheckIn + '.tmp')
         os.rename(serverDir + fileCheckIn + '.tmp', serverDir + fileCheckIn)
-        
-        return 'File encrypted and sent to server.'
+        return  'File encrypted and sent to server.'
     elif fileSecFlag == 'INTEGRITY':
         #Write file to server
         if file:
@@ -353,6 +352,7 @@ def process_check_in(serverDir, fileCheckIn, client, fileSecFlag):
             
         return "File signed, encrypted and sent to server"
     else:
+        print 'flag not set'
         #Remove Previous MetaData Files
         if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
             os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
@@ -363,11 +363,12 @@ def process_check_in(serverDir, fileCheckIn, client, fileSecFlag):
         if os.path.exists(serverDir + '.' + fileCheckIn):
             os.remove(serverDir + '.' + fileCheckIn)
 
-        #Write file to serve
+        print 'meta removed'
+        #Write file to server
         if file:
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    
+        print 'file saved'
 
         #Write metadata file
         filePointer = open(serverDir + '.' + fileCheckIn, 'w')
@@ -375,15 +376,12 @@ def process_check_in(serverDir, fileCheckIn, client, fileSecFlag):
         dataToFile = client + '***' + delegationFlag
         filePointer.write(dataToFile)
         filePointer.close()
-        
-        #Send actual file to server
-        shutil.copy(fullPathFile, serverDir)
+        print 'let us do this'
         return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
 
 
 
-def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecFlag):
-
+def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecFlag, file):
     if os.path.isfile(serverDir + fileCheckIn):
         if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
             metaFile = serverDir + '.' +  fileCheckIn + '.enc.sign'
@@ -421,7 +419,7 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecF
 
         #Write owner and  key to a metadata file.....
         filePointer = open(serverDir + '.' + fileCheckIn + '.enc', 'w')
-        delegationFlag = 'YES'
+        delegationFlag = 'YES\n'
         dataToFile = isOwner + '***' + randomKey + '***' + delegationFlag
         filePointer.write(dataToFile)
         filePointer.write(lines)
@@ -460,7 +458,7 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecF
         #Generate signature and construct metadata file
         hash_sha2 = hashlib.sha256(message).hexdigest()
         filePointer = open(serverDir + '.' + fileCheckIn + '.sign', 'w')
-        delegationFlag = 'YES'
+        delegationFlag = 'YES\n'
         dataToFile = isOwner + '***' + hash_sha2 + '***' + delegationFlag
         filePointer.write(dataToFile)
         filePointer.write(lines)
@@ -497,7 +495,7 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecF
         #Generate signature and construct metadata file
         hash_sha2 = hashlib.sha256(message).hexdigest()
         filePointer = open(serverDir + '.' + fileCheckIn + '.enc.sign', 'w')
-        delegationFlag = 'YES'
+        delegationFlag = 'YES\n'
         dataToFile = isOwner + '***' + randomKey + '***' + hash_sha2 + '***' + delegationFlag
         filePointer.write(dataToFile)
         filePointer.write(lines)
@@ -506,24 +504,12 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecF
             
         return "File signed, encrypted and sent to server"
     else:
-        #Remove Previous MetaData Files
-        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
-            os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
-        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
-            os.remove(serverDir + '.' + fileCheckIn + '.enc')
-        if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
-            os.remove(serverDir + '.' + fileCheckIn + '.sign')
-        if os.path.exists(serverDir + '.' + fileCheckIn):
-            os.remove(serverDir + '.' + fileCheckIn)
-
-        #Write file to serve
+         #Write file to serve
         if file:
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     
         return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
-
-
 
     
     
@@ -532,53 +518,56 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecF
 #Check in method used 
 @app.route("/check_in", methods=['GET', 'POST'])
 def check_in():
+    print 'begin'
     #Pull in parameters from URL
     client = request.args.get('client')
     fileCheckIn = request.args.get('file')
     fileSecFlag = request.args.get('sec_flag')
     curr_time = request.args.get('curr_time')
     file = request.files['files']
-    
+
+    print 'data'
     #Sanitize and get absolute dirs for files
     fullPathFile = os.getcwd() + '/clients/' + client + '/files/' + fileCheckIn
     serverDir = os.getcwd() + '/server/files/'
-
+    print 'more vars'
     #If file exists, check the sec flag and transfer file accordiingly. Otherwise, throw an error saying that the file doesn't exist
     if os.path.isfile(serverDir + fileCheckIn):
-        if os.path.exists(serverDir + '.' + file_CheckIn + '.enc.sign'):
-            metaFile = serverDir + '.' +  file_CheckIn + '.enc.sign'
-        elif os.path.exists(serverDir + '.' +  file_CheckIn + '.enc'):
-            metaFile = serverDir + '.' +  file_CheckIn + '.enc'
-        elif os.path.exists(serverDir + '.' +  file_CheckIn + '.sign'):
-            metaFile = serverDir + '.' +  file_CheckIn + '.sign'
-        elif os.path.exists(serverDir + '.' +  file_CheckIn):
-            metaFile = serverDir + '.' +  file_CheckIn
-
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            metaFile = serverDir + '.' +  fileCheckIn + '.enc.sign'
+        elif os.path.exists(serverDir + '.' +  fileCheckIn + '.enc'):
+            metaFile = serverDir + '.' +  fileCheckIn + '.enc'
+        elif os.path.exists(serverDir + '.' +  fileCheckIn + '.sign'):
+            metaFile = serverDir + '.' +  fileCheckIn + '.sign'
+        elif os.path.exists(serverDir + '.' +  fileCheckIn):
+            metaFile = serverDir + '.' +  fileCheckIn
+        print 'alrighty then'
+        
         with open(metaFile, 'r') as meta:
             first_line = meta.readline().replace('\n','')
             parsed_first_line = first_line.split('***')
             isOwner = parsed_first_line[0]
             if isOwner == client:
-                retVal =  process_check_in(serverDir, fileCheckIn, client, fileSecFlag)
+                retVal =  process_check_in(serverDir, fileCheckIn, client, fileSecFlag, file)
                 return retVal
             else:
+                print 'we are not the owner'
                 if first_line[len(first_line)-1] == 'NO':
-                    resp = app.make_response('308')
-                    resp.headers['ReadSuccess'] = 'false'
-                    resp.headers['DispMessage'] = 'Sorry. You do not have permissions to check out this file.'
-                    return resp
+                    return 'Sorry. You do not have permissions to check in this file.'
                 else:
                     canCheckIn = can_check_in(client, serverDir, fileCheckIn, curr_time)
-
+                    print 'canCheck: '
                     if canCheckIn:
-                        retVal = process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecFlag)
+                        retVal = process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecFlag, file)
                         return retVal
                     else:
-                        resp = app.make_response('308')
-                        resp.headers['ReadSuccess'] = 'false'
-                        resp.headers['DispMessage'] = 'Sorry. You do not have permissions to check out this file.'
-                        return resp
-
+                        print 'permerssion denied'
+                        return 'Sorry. You do not have permissions to check in this file.'
+    else:
+        print 'does not exist'
+        retVal =  process_check_in(serverDir, fileCheckIn, client, fileSecFlag, file)
+        print 'fin processing'
+        return retVal
                 
    
 
