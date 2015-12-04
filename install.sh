@@ -3,7 +3,7 @@
 sudo apt-get update
 sudo apt-get upgrade
 
-sudo apt-get install git gcc g++ make gedit emacs23 python python-virtualenv nginx openssl python-pip python-dev
+sudo apt-get install git gcc g++ make gedit emacs23 python python-virtualenv nginx openssl python-dev python-pip
 
 pip install pycrypto
 
