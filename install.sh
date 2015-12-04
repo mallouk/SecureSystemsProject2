@@ -3,8 +3,10 @@
 sudo apt-get update
 sudo apt-get upgrade
 
-sudo apt-get install git gcc g++ make gedit emacs23 python python-virtualenv nginx openssl python-dev python-pip
-
+sudo apt-get install git gcc g++ make gedit nginx openssl
+sudo apt-get install python python-virtualenv
+sudo apt-get install python-dev
+sudo apt-get install python-pip
 pip install pycrypto
 
 git clone https://github.com/mallouk/SecureSystemsProject2.git
