@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, after_this_request
 from flask import Flask, request
 from flask import send_from_directory
 from Crypto.Cipher import AES
@@ -89,10 +89,14 @@ def process_check_out(serverDir, clientDir, fileCheckIn, filename_output, first_
     if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
         print key_or_hash
         decrypt_file(key_or_hash, serverDir + fileCheckIn, serverDir + fileCheckIn + '.tmp')
-        os.rename(serverDir + fileCheckIn + '.tmp', serverDir + fileCheckIn)
         signVer = verify_signature(serverDir, fileCheckIn, first_line[2])
+        # os.rename(serverDir + fileCheckIn + '.tmp', serverDir + fileCheckIn)
+        @after_this_request
+        def remove_file(response):
+            os.remove(serverDir + fileCheckIn + '.tmp')
+            return response
         if signVer: #If signature matches
-            return send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True)
+            return send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn + '.tmp', as_attachment=True)
         else: #If signature doesn't match
             return 'File has been modified in transit. Transfer aborted.'
     elif os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
