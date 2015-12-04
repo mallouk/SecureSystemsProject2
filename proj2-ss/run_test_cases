@@ -6,7 +6,6 @@ python client.py --client client_0 --check_in 0.txt --sec_flag INTEGRITY
 echo ""
 ls -la server/files
 echo ""
-echo ""
 
 read -p "Verifying signature of 0.txt with: python verify_signature.py 0.txt"
 python verify_signature.py 0.txt
@@ -33,4 +32,41 @@ echo ""
 
 read -p "python client.py --client client_0 --check_out 0.txt --output 0_copy.txt"
 python client.py --client client_0 --check_out 0.txt --output 0_copy2.txt
+echo ""
+ls -la clients/client_0/files
+echo ""
+
+read -p "python client.py --client client_0 --check_in 1.txt --sec_flag CONFIDENTIALITY"
+python client.py --client client_0 --check_in 1.txt --sec_flag CONFIDENTIALITY
+echo ""
+ls -la server/files
+echo ""
+
+read -p "python client.py --client client_0 --check_out 1.txt --output 1_copy.txt"
+python client.py --client client_0 --check_out 1.txt --output 1_copy.txt
+echo ""
+ls -la clients/client_0/files
+echo""
+
+
+
+read -p "python client.py --client client_0 --check_in 1.txt --sec_flag CONFIDENTIALITY_INTEGRITY"
+python client.py --client client_0 --check_in 1.txt --sec_flag CONFIDENTIALITY_INTEGRITY
+echo ""
+ls -la server/files
+echo ""
+
+read -p "Verifying signature of 0.txt with: python verify_signature.py 1.txt"
+python verify_signature.py 1.txt
+echo ""
+
+read -p "python client.py --client client_0 --check_out 1.txt --output 1_copy2.txt"
+python client.py --client client_0 --check_out 1.txt --output 1_copy2.txt
+echo ""
+ls -la clients/client_0/files
+echo""
+
+read -p "python client.py --client client_0 --delegate 1.txt client_1 30 checkin_checkout false"
+python client.py --client client_0 --delegate 1.txt client_1 30 checkin_checkout false
+echo ""
 
