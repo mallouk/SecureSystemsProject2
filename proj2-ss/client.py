@@ -56,6 +56,7 @@ if args.check_out != defaultArg:
         fileTest = r.text
         writer = open(clientDir + args.output, 'w')
         writer.write(fileTest)
+        print 'File sent back to client'
 
         
 if args.delegate != defaultArg:
