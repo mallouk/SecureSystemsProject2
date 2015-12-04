@@ -253,7 +253,7 @@ def write_delegation(serverDir, file_delegate, client_delegate, expire_time, per
             os.rename(serverDir + '.' + file_delegate + '_tmp', metaFile)
 
 
-def process_check_in(serverDir, fileCheckIn, client):
+def process_check_in(serverDir, fileCheckIn, client, fileSecFlag):
     #Deal with specific flag options
     if fileSecFlag == 'CONFIDENTIALITY':
         #Generate random key used for encryption
@@ -382,7 +382,7 @@ def process_check_in(serverDir, fileCheckIn, client):
 
 
 
-def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner):
+def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecFlag):
 
     if os.path.isfile(serverDir + fileCheckIn):
         if os.path.exists(serverDir + '.' + file_CheckIn + '.enc.sign'):
@@ -425,6 +425,7 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner):
         delegationFlag = 'YES'
         dataToFile = isOwner + '***' + randomKey + '***' + delegationFlag
         filePointer.write(dataToFile)
+        filePointer.write(lines)
         filePointer.close()
 
         #Write file to server
@@ -460,9 +461,10 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner):
         #Generate signature and construct metadata file
         hash_sha2 = hashlib.sha256(message).hexdigest()
         filePointer = open(serverDir + '.' + fileCheckIn + '.sign', 'w')
-        delegationFlag = 'NO'
-        dataToFile = client + '***' + hash_sha2 + '***' + delegationFlag
+        delegationFlag = 'YES'
+        dataToFile = isOwner + '***' + hash_sha2 + '***' + delegationFlag
         filePointer.write(dataToFile)
+        filePointer.write(lines)
         filePointer.close()
         return 'File signed and sent to server.'
     elif fileSecFlag == 'CONFIDENTIALITY_INTEGRITY':
@@ -496,9 +498,10 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner):
         #Generate signature and construct metadata file
         hash_sha2 = hashlib.sha256(message).hexdigest()
         filePointer = open(serverDir + '.' + fileCheckIn + '.enc.sign', 'w')
-        delegationFlag = 'NO'
-        dataToFile = client + '***' + randomKey + '***' + hash_sha2 + '***' + delegationFlag
+        delegationFlag = 'YES'
+        dataToFile = isOwner + '***' + randomKey + '***' + hash_sha2 + '***' + delegationFlag
         filePointer.write(dataToFile)
+        filePointer.write(lines)
         filePointer.close()
 
             
@@ -519,16 +522,6 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     
-
-        #Write metadata file
-        filePointer = open(serverDir + '.' + fileCheckIn, 'w')
-        delegationFlag = 'NO'
-        dataToFile = client + '***' + delegationFlag
-        filePointer.write(dataToFile)
-        filePointer.close()
-        
-        #Send actual file to server
-        shutil.copy(fullPathFile, serverDir)
         return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
 
 
@@ -567,7 +560,7 @@ def check_in():
             parsed_first_line = first_line.split('***')
             isOwner = parsed_first_line[0]
             if isOwner == client:
-                retVal =  process_check_in(serverDir, fileCheckIn, client)
+                retVal =  process_check_in(serverDir, fileCheckIn, client, fileSecFlag)
                 return retVal
             else:
                 if first_line[len(first_line)-1] == 'NO':
@@ -579,7 +572,7 @@ def check_in():
                     canCheckIn = can_check_in(client, serverDir, fileCheckIn, curr_time)
 
                     if canCheckIn:
-                        retVal = process_check_in_delegated(serverDir, fileCheckIn, client, isOwner)
+                        retVal = process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecFlag)
                         return retVal
                     else:
                         resp = app.make_response('308')
