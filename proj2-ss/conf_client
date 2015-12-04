@@ -22,13 +22,13 @@ if [ -d ${CLIENT} ]; then
     echo "Somebody has already claimed that client name. Try another one."
     exit 1
 fi
-mkdir clients/
-mkdir clients/${CLIENT}
+mkdir -p clients/
+mkdir -p clients/${CLIENT}
 mkdir -p clients/${CLIENT}/files
 
 #Generate client key
 echo "Generating Client Side Key..."
-openssl genrsa -des3 -out ./clients/${CLIENT}/${OPENSSLFILE_CLIENT}.key 1024 -config ./openssl.cnf
+openssl genrsa -out ./clients/${CLIENT}/${OPENSSLFILE_CLIENT}.key 1024 -config ./openssl.cnf
 
 #Generate client cert request
 echo ""
@@ -38,7 +38,12 @@ openssl req -new -key ./clients/${CLIENT}/${OPENSSLFILE_CLIENT}.key -out ./clien
 #Generate client cert
 echo ""
 echo "Signing Client Key with CA Key..."
+#openssl x509 -req -days 365 -in /clients/${CLIENT}/${OPENSSLFILE_CLIENT}.csr -CA ./ca/${OPENSSLFILE_CA}.crt -CAkey ./ca/${OPENSSLFILE_CA}.key -out ./clients/${CLIENT}/${OPENSSLFILE_CLIENT}.crt -config ./openssl.cnf
 openssl ca -days 365 -in ./clients/${CLIENT}/${OPENSSLFILE_CLIENT}.csr -cert ./ca/${OPENSSLFILE_CA}.crt -keyfile ./ca/${OPENSSLFILE_CA}.key -out ./clients/${CLIENT}/${OPENSSLFILE_CLIENT}.crt -config ./openssl.cnf
 
 #Update permissions
-chmod ugo-rwx,u+r clients/${CLIENT}/${OPENSSLFILE_CLIENT}.key
+#chmod ugo-rwx,u+r clients/${CLIENT}/${OPENSSLFILE_CLIENT}.key
+
+#Make client keys not require password
+cp -r clients/${CLIENT}/securesysClient.key clients/${CLIENT}/securesysClient-backup.key
+openssl rsa -in clients/${CLIENT}/securesysClient-backup.key -out clients/${CLIENT}/securesysClient.key

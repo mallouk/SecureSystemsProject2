@@ -1,0 +1,25 @@
+#!/bin/bash
+
+cwd=`pwd`
+
+if [ ! -d ${cwd}/ca ]; then
+   echo "No CA available"
+   exit 1
+fi
+
+if [ "$#" != "1" ]; then
+echo "Please provide only one argument: the name of the client cert"
+exit 1
+fi
+
+if [ -d ${cwd}/client_cert_$1 ]; then
+   rm -rf ${cwd}/client_cert_$1
+fi
+
+mkdir ${cwd}/client_cert_$1
+
+openssl genrsa -out ${cwd}/client_cert_$1/client.key.pem 2048
+openssl req -config ${cwd}/ca/openssl.cnf -new -key ${cwd}/client_cert_$1/client.key.pem -out ${cwd}/client_cert_$1/client.csr.pem
+
+# Sign the client certificate with our CA cert.  Unlike signing our own server cert, this is what we want to do.
+openssl x509 -req -days 365 -in ${cwd}/client_cert_$1/client.csr.pem -CA ${cwd}/ca/certs/ca.cert.pem -CAkey ${cwd}/ca/private/ca.key.pem -set_serial 01 -out ${cwd}/client_cert_$1/client.crt.pem

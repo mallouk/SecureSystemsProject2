@@ -33,3 +33,7 @@ chmod ugo-rwx,u+r server/${OPENSSLFILE_SERVER}.key
 
 #Create file for server public key to be used in the python encryption of the metadata file
 openssl x509 -pubkey -noout -in securesysServer.crt > server/public_server.key
+
+#Make server key not required password
+cp -r server/securesysServer.key server/securesysServer-backup.key
+openssl rsa -in server/securesysServer-backup.key -out securesysServer.key

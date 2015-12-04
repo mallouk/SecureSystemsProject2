@@ -6,7 +6,8 @@ sudo cp -r ssl.conf /etc/nginx/conf.d/
 cat server/securesysServer.crt ca/securesysCA.crt > bundle.crt
 sudo cp -r bundle.crt /etc/nginx/ssl/
 
-
+cp -r server/securesysServer.key server/securesysServer-backup.key
+openssl rsa -in server/securesysServer-backup.key -out securesysServer.key
 sudo cp -r securesysServer.key /etc/nginx/ssl/
 
-sudo cp -r clients/client_0/securesysClient.crt /etc/nginx/ssl/
+sudo cp -r clients/matthew/securesysClient.crt /etc/nginx/ssl/
