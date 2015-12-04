@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import Flask, request
+from flask import send_from_directory
 from Crypto.Cipher import AES
 from werkzeug import secure_filename
 import os
@@ -51,6 +52,7 @@ def encrypt_file(key, in_filename, out_filename=None):
 
 #Method to decrypt file, given a key, ciphertext file, and the name of what the file should be called, this method should return a decrypted version of a file.
 def decrypt_file(key, in_filename, out_filename=None):
+    print out_filename
     chunksize = 24*1024
     if not out_filename:
         out_filename = os.path.splitext(in_filename)[0]
@@ -86,27 +88,28 @@ def process_check_out(serverDir, clientDir, fileCheckIn, filename_output, first_
     key_or_hash = first_line[1]
 
     if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
-        decrypt_file(key_or_hash, serverDir + fileCheckIn, serverDir + filename_output + '.tmp')
+        decrypt_file(key_or_hash, serverDir + fileCheckIn, serverDir + filename_output)
         signVer = verify_signature(serverDir, fileCheckIn, first_line[2])
         if signVer: #If signature matches
-            shutil.copyfile(serverDir + filename_output + '.tmp', clientDir + filename_output)
+            send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True)
             return 'File decrypted and signature checked with a match confirmed. File sent to client.'
         else: #If signature doesn't match
             return 'File has been modified in transit. Transfer aborted.'
         # os.remove(serverDir + filename_output + '.tmp')
     elif os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
-        decrypt_file(key_or_hash, serverDir + fileCheckIn, clientDir + filename_output)
-        return 'File decrypted and sent back to the client'
+        decrypt_file(key_or_hash, serverDir + fileCheckIn, serverDir + fileCheckIn + "1")
+        return send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn + "1", as_attachment=True)
+        #return 'File decrypted and sent back to the client'
     elif os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
         signVer = verify_signature(serverDir, fileCheckIn, first_line[1])
         if signVer: #If signature matches
-            shutil.copyfile(serverDir + fileCheckIn, clientDir + filename_output)
+            send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True)
             return 'Signature checked with a match confirmed. File sent to client.'
         else: #If signature doesn't match
             return 'File has been modified in transit. Transfer aborted.'
     else:
-        shutil.copyfile(serverDir + fileCheckIn, clientDir + filename_output)
-        return 'File sent to client.'
+        return send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True)
+        #return 'File sent to client.'
 
 def can_check_out(client, serverDir, fileCheckIn, curr_time):
 

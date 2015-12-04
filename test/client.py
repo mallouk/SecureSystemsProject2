@@ -27,10 +27,15 @@ client_crt = os.getcwd() + '/clients/' + args.client + '/securesysClient.crt'
 client_key = os.getcwd() + '/clients/' + args.client + '/securesysClient.key'
 
 data={'enc_type':'multipart/form-data'}
-files={'file': open("/home/matthew/git/SecureSystemsProject2/test/"+args.test, 'rb')}
-print files
-r = requests.post("http://localhost:5000/test", verify=cert_auth_crt, cert=(client_crt, client_key), data=data, files=files)
+#files={'file': open("/home/matthew/git/SecureSystemsProject2/test/"+args.test, 'rb')}
+
+
+
+#r = requests.post("http://localhost:5000/test", verify=cert_auth_crt, cert=(client_crt, client_key), data=data, files=files)
+data={'file':args.test}
+r = requests.get("http://localhost:5000/down", verify=cert_auth_crt, cert=(client_crt, client_key), params=data)
 print r.status_code
+print r.headers
 print r.text
 
 

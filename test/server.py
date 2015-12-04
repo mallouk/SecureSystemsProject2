@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import Flask, request, redirect, url_for
+from flask import send_from_directory
 from werkzeug import secure_filename
 import os, sys, requests, string, random, struct
 UPLOAD_FOLDER = 'joe'
@@ -27,6 +28,14 @@ def test():
             print 'fofowfjwof'
         return 'moo'
     return 'boo'
+
+@app.route('/down', methods=['GET'])
+def down():
+    files = request.args.get('file')
+    return send_from_directory(app.config['UPLOAD_FOLDER'], files)
+
+    
+
 
 if __name__ == '__main__':
     app.run()
