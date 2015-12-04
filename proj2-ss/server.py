@@ -132,6 +132,28 @@ def process_check_out(serverDir, clientDir, fileCheckIn, filename_output, first_
         resp.headers['DispMessage'] = 'File Successfully Transferred'
         return resp
 
+def can_check_in(client, serverDir, fileCheckIn, curr_time):
+
+    if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+        metaFile = serverDir + '.' + fileCheckIn + '.enc.sign'
+    elif os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
+        metaFile = serverDir + '.' + fileCheckIn + '.enc'
+    elif os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
+        metaFile = serverDir + '.' + fileCheckIn + '.sign'
+    elif os.path.exists(serverDir + '.' + fileCheckIn):
+        metaFile = serverDir + '.' + fileCheckIn
+
+    with open(metaFile, 'r') as metafile:
+        first_line = metafile.readline()
+        for line in metafile:
+            if '***' in line:
+                parse_out = line.split('***')
+                if parse_out[0] == client or parse_out[0] == 'ALL':
+                    if curr_time <= parse_out[1]:
+                        if 'checkout' in parse_out[2]:
+                            return True
+    return False
+    
 def can_check_out(client, serverDir, fileCheckIn, curr_time):
 
     if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
@@ -229,22 +251,9 @@ def write_delegation(serverDir, file_delegate, client_delegate, expire_time, per
             os.remove(metaFile)
             print "I'm in Write Delegate"
             os.rename(serverDir + '.' + file_delegate + '_tmp', metaFile)
-            
-#Check in method used 
-@app.route("/check_in", methods=['GET', 'POST'])
-def check_in():
-    #Pull in parameters from URL
-    client = request.args.get('client')
-    fileCheckIn = request.args.get('file')
-    fileSecFlag = request.args.get('sec_flag')
-    curr_time = request.args.get('curr_time')
-    file = request.files['files']
-    
-    #Sanitize and get absolute dirs for files
-    fullPathFile = os.getcwd() + '/clients/' + client + '/files/' + fileCheckIn
-    serverDir = os.getcwd() + '/server/files/'
 
-    #If file exists, check the sec flag and transfer file accordiingly. Otherwise, throw an error saying that the file doesn't exist
+
+def process_check_in(serverDir, fileCheckIn, client):
     #Deal with specific flag options
     if fileSecFlag == 'CONFIDENTIALITY':
         #Generate random key used for encryption
@@ -371,6 +380,216 @@ def check_in():
         shutil.copy(fullPathFile, serverDir)
         return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
 
+
+
+def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner):
+
+    if os.path.isfile(serverDir + fileCheckIn):
+        if os.path.exists(serverDir + '.' + file_CheckIn + '.enc.sign'):
+            metaFile = serverDir + '.' +  file_CheckIn + '.enc.sign'
+        elif os.path.exists(serverDir + '.' +  file_CheckIn + '.enc'):
+            metaFile = serverDir + '.' +  file_CheckIn + '.enc'
+        elif os.path.exists(serverDir + '.' +  file_CheckIn + '.sign'):
+            metaFile = serverDir + '.' +  file_CheckIn + '.sign'
+        elif os.path.exists(serverDir + '.' +  file_CheckIn):
+            metaFile = serverDir + '.' +  file_CheckIn
+
+
+    lines=''
+    with open(metaFile, 'r') as meta:
+        first_line = meta.readline().replace('\n','')
+        first_line = ''
+        
+        for line in meta:
+            lines+=lines +'\n'
+                        
+        metaFileWrite.close()
+        
+    #Deal with specific flag options
+    if fileSecFlag == 'CONFIDENTIALITY':
+        #Generate random key used for encryption
+        randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
+
+        #Remove Previous MetaData Files
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn):
+            os.remove(serverDir + '.' + fileCheckIn)
+
+        #Write owner and  key to a metadata file.....
+        filePointer = open(serverDir + '.' + fileCheckIn + '.enc', 'w')
+        delegationFlag = 'YES'
+        dataToFile = isOwner + '***' + randomKey + '***' + delegationFlag
+        filePointer.write(dataToFile)
+        filePointer.close()
+
+        #Write file to server
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        #Encrypt file and rewrite it to server
+        encrypt_file(randomKey, serverDir + fileCheckIn + '', serverDir + fileCheckIn + '.tmp')
+        os.rename(serverDir + fileCheckIn + '.tmp', serverDir + fileCheckIn)
+        
+        return 'File encrypted and sent to server.'
+    elif fileSecFlag == 'INTEGRITY':
+        #Write file to server
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        #Get file contents
+        message = ''
+        with open(serverDir + fileCheckIn) as myfile:
+            message = myfile.read().replace('\n', '')
+            #Remove Previous MetaData Files
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn):
+            os.remove(serverDir + '.' + fileCheckIn)
+
+        #Generate signature and construct metadata file
+        hash_sha2 = hashlib.sha256(message).hexdigest()
+        filePointer = open(serverDir + '.' + fileCheckIn + '.sign', 'w')
+        delegationFlag = 'NO'
+        dataToFile = client + '***' + hash_sha2 + '***' + delegationFlag
+        filePointer.write(dataToFile)
+        filePointer.close()
+        return 'File signed and sent to server.'
+    elif fileSecFlag == 'CONFIDENTIALITY_INTEGRITY':
+        #Generate enc key
+        randomKey = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
+
+        #Write file to serve
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    
+        #Enrypt file and send to the server
+        encrypt_file(randomKey, serverDir + fileCheckIn + '', serverDir + fileCheckIn + '.tmp')
+        os.rename(serverDir + fileCheckIn + '.tmp', serverDir + fileCheckIn)
+               
+        #Read encrypted file and create signature
+        message = ''
+        with open(serverDir + fileCheckIn) as myfile:
+            message = myfile.read().replace('\n', '')
+
+        #Remove Previous MetaData Files
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn):
+            os.remove(serverDir + '.' + fileCheckIn)
+
+        #Generate signature and construct metadata file
+        hash_sha2 = hashlib.sha256(message).hexdigest()
+        filePointer = open(serverDir + '.' + fileCheckIn + '.enc.sign', 'w')
+        delegationFlag = 'NO'
+        dataToFile = client + '***' + randomKey + '***' + hash_sha2 + '***' + delegationFlag
+        filePointer.write(dataToFile)
+        filePointer.close()
+
+            
+        return "File signed, encrypted and sent to server"
+    else:
+        #Remove Previous MetaData Files
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
+            os.remove(serverDir + '.' + fileCheckIn + '.enc')
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
+            os.remove(serverDir + '.' + fileCheckIn + '.sign')
+        if os.path.exists(serverDir + '.' + fileCheckIn):
+            os.remove(serverDir + '.' + fileCheckIn)
+
+        #Write file to serve
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    
+
+        #Write metadata file
+        filePointer = open(serverDir + '.' + fileCheckIn, 'w')
+        delegationFlag = 'NO'
+        dataToFile = client + '***' + delegationFlag
+        filePointer.write(dataToFile)
+        filePointer.close()
+        
+        #Send actual file to server
+        shutil.copy(fullPathFile, serverDir)
+        return 'File sent to server, but because your flag does not match either CONFIDENTIALITY or INTEGRITY, a flag of NONE has been presumed.'
+
+
+
+    
+    
+    
+            
+#Check in method used 
+@app.route("/check_in", methods=['GET', 'POST'])
+def check_in():
+    #Pull in parameters from URL
+    client = request.args.get('client')
+    fileCheckIn = request.args.get('file')
+    fileSecFlag = request.args.get('sec_flag')
+    curr_time = request.args.get('curr_time')
+    file = request.files['files']
+    
+    #Sanitize and get absolute dirs for files
+    fullPathFile = os.getcwd() + '/clients/' + client + '/files/' + fileCheckIn
+    serverDir = os.getcwd() + '/server/files/'
+
+    #If file exists, check the sec flag and transfer file accordiingly. Otherwise, throw an error saying that the file doesn't exist
+    if os.path.isfile(serverDir + fileCheckIn):
+        if os.path.exists(serverDir + '.' + file_CheckIn + '.enc.sign'):
+            metaFile = serverDir + '.' +  file_CheckIn + '.enc.sign'
+        elif os.path.exists(serverDir + '.' +  file_CheckIn + '.enc'):
+            metaFile = serverDir + '.' +  file_CheckIn + '.enc'
+        elif os.path.exists(serverDir + '.' +  file_CheckIn + '.sign'):
+            metaFile = serverDir + '.' +  file_CheckIn + '.sign'
+        elif os.path.exists(serverDir + '.' +  file_CheckIn):
+            metaFile = serverDir + '.' +  file_CheckIn
+
+        with open(metaFile, 'r') as meta:
+            first_line = meta.readline().replace('\n','')
+            parsed_first_line = first_line.split('***')
+            isOwner = parsed_first_line[0]
+            if isOwner == client:
+                retVal =  process_check_in(serverDir, fileCheckIn, client)
+                return retVal
+            else:
+                if first_line[len(first_line)-1] == 'NO':
+                    resp = app.make_response('308')
+                    resp.headers['ReadSuccess'] = 'false'
+                    resp.headers['DispMessage'] = 'Sorry. You do not have permissions to check out this file.'
+                    return resp
+                else:
+                    canCheckIn = can_check_in(client, serverDir, fileCheckIn, curr_time)
+
+                    if canCheckIn:
+                        retVal = process_check_in_delegated(serverDir, fileCheckIn, client, isOwner)
+                        return retVal
+                    else:
+                        resp = app.make_response('308')
+                        resp.headers['ReadSuccess'] = 'false'
+                        resp.headers['DispMessage'] = 'Sorry. You do not have permissions to check out this file.'
+                        return resp
+
+                
+   
+
 #Checkout method
 @app.route("/check_out")
 def check_out():
@@ -477,7 +696,7 @@ def safe_delete():
                     canDelete = can_delete(client, file_delete, serverDir, curr_time)
                     if canDelete:
                         os.system('shred -fu ' + serverDir + file_delete)
-                        os.system('shred -fu ' + metaData)
+                        os.system('shred -fu ' + metaFile)
                         return 'File deleted from server'
                     else:
                         return "Sorry. You do not have permissions to access this file."
