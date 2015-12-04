@@ -436,9 +436,10 @@ def safe_delete():
             firstLine = meta.readline()
             first_line = firstLine.split('***')
             isOwner = first_line[0]
+            
             if isOwner == client: #We own it
-                os.remove(serverDir + file_delete)
-                os.remove(metaFile)
+                os.system('shred -fu ' + serverDir + file_delete)
+                os.system('shred -fu ' + metaFile) 
                 return 'File deleted from server'
             else: #We don't own it
                 if first_line[len(first_line)-1] == 'NO':
@@ -446,10 +447,8 @@ def safe_delete():
                 else:
                     canDelete = can_delete(client, file_delete, serverDir, curr_time)
                     if canDelete:
-                        os.system('shred -u ' + serverDir + file_delete)
-                        os.system('shred -u ' + serverDir + metaData)
-                        #os.remove(serverDir + file_delete)
-                        #os.remove(metaFile)
+                        os.system('shred -fu ' + serverDir + file_delete)
+                        os.system('shred -fu ' + metaData)
                         return 'File deleted from server'
                     else:
                         return "Sorry. You do not have permissions to access this file."
