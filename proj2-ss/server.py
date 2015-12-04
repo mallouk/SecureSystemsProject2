@@ -96,21 +96,41 @@ def process_check_out(serverDir, clientDir, fileCheckIn, filename_output, first_
             os.remove(serverDir + fileCheckIn + '.tmp')
             return response
         if signVer: #If signature matches
-            return send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn + '.tmp', as_attachment=True)
+            # app.make_response(('Content-Type: application/octet-stream', 200, 'FileHeader'))
+            resp = app.make_response(send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn + '.tmp', as_attachment=True))
+            resp.headers['ReadSuccess'] = 'true'
+            resp.headers['DispMessage'] = 'File Successfully Transferred'
+            return resp
+            # return send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn + '.tmp', as_attachment=True)
         else: #If signature doesn't match
-            return 'File has been modified in transit. Transfer aborted.'
+            resp = app.make_response('308')
+            resp.headers['ReadSuccess'] = 'false'
+            resp.headers['DispMessage'] = 'File has been modified in transit. Transfer aborted.'
+            return resp
     elif os.path.exists(serverDir + '.' + fileCheckIn + '.enc'):
         decrypt_file(key_or_hash, serverDir + fileCheckIn, serverDir + fileCheckIn + '.tmp')
         os.rename(serverDir + fileCheckIn + '.tmp', serverDir + fileCheckIn)
-        return send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True)
+        resp = app.make_response(send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True))
+        resp.headers['ReadSuccess'] = 'true'
+        resp.headers['DispMessage'] = 'File Successfully Transferred'
+        return resp
     elif os.path.exists(serverDir + '.' + fileCheckIn + '.sign'):
         signVer = verify_signature(serverDir, fileCheckIn, first_line[1])
         if signVer: #If signature matches
-            return send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True)
+            resp = app.make_response(send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True))
+            resp.headers['ReadSuccess'] = 'true'
+            resp.headers['DispMessage'] = 'File Successfully Transferred'
+            return resp
         else: #If signature doesn't match
-            return 'File has been modified in transit. Transfer aborted.'
+            resp = app.make_response('308')
+            resp.headers['ReadSuccess'] = 'false'
+            resp.headers['DispMessage'] = 'File has been modified in transit. Transfer aborted.'
+            return resp
     else:
-        return send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True)
+        resp = app.make_response(send_from_directory(app.config['UPLOAD_FOLDER'], fileCheckIn, as_attachment=True))
+        resp.headers['ReadSuccess'] = 'true'
+        resp.headers['DispMessage'] = 'File Successfully Transferred'
+        return resp
 
 def can_check_out(client, serverDir, fileCheckIn, curr_time):
 
@@ -365,7 +385,10 @@ def check_out():
     serverDir = os.getcwd() + '/server/files/'
     clientDir = os.getcwd() + '/clients/' + client + '/files/'
     if not os.path.isfile(serverDir + fileCheckIn):
-        return "File doesn't exist. Try again please."
+        resp = app.make_response('308')
+        resp.headers['ReadSuccess'] = 'false'
+        resp.headers['DispMessage'] = 'File doesn\'t exist. Try again please.'
+        return resp
     else:
         #File exists, let's check if it's encrypted
         if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
@@ -394,7 +417,10 @@ def check_out():
                 return retVal
             else: #We do not own the file, check for delegations
                 if first_line[len(first_line)-1] == 'NO':
-                    return "Sorry. You do not have permissions to access this file."
+                    resp = app.make_response('308')
+                    resp.headers['ReadSuccess'] = 'false'
+                    resp.headers['DispMessage'] = 'Sorry. You do not have permissions to check out this file.'
+                    return resp
                 else:
                     canCheckOut = can_check_out(client, serverDir, fileCheckIn, curr_time)
 
@@ -402,7 +428,10 @@ def check_out():
                         retVal = process_check_out(serverDir, clientDir, fileCheckIn, filename_output, first_line)
                         return retVal
                     else:
-                        return 'Sorry. You do not have permissions to check out this file.'
+                        resp = app.make_response('308')
+                        resp.headers['ReadSuccess'] = 'false'
+                        resp.headers['DispMessage'] = 'Sorry. You do not have permissions to check out this file.'
+                        return resp
 
 @app.route('/safe_delete')
 def safe_delete():
