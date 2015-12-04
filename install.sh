@@ -1,12 +1,12 @@
 #!/bin/bash
 
-sudo apt-get update
-sudo apt-get upgrade
+sudo apt-get -y update
+sudo apt-get -y upgrade
 
-sudo apt-get install git gcc g++ make gedit nginx openssl
-sudo apt-get install python python-virtualenv
-sudo apt-get install python-dev
-sudo apt-get install python-pip
+sudo apt-get -y install git gcc g++ make gedit nginx openssl
+sudo apt-get -y install python python-virtualenv
+sudo apt-get -y install python-dev
+sudo apt-get -y install python-pip
 pip install pycrypto
 pip install flask
 
