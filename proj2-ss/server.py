@@ -385,14 +385,14 @@ def process_check_in(serverDir, fileCheckIn, client, fileSecFlag):
 def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecFlag):
 
     if os.path.isfile(serverDir + fileCheckIn):
-        if os.path.exists(serverDir + '.' + file_CheckIn + '.enc.sign'):
-            metaFile = serverDir + '.' +  file_CheckIn + '.enc.sign'
-        elif os.path.exists(serverDir + '.' +  file_CheckIn + '.enc'):
-            metaFile = serverDir + '.' +  file_CheckIn + '.enc'
-        elif os.path.exists(serverDir + '.' +  file_CheckIn + '.sign'):
-            metaFile = serverDir + '.' +  file_CheckIn + '.sign'
-        elif os.path.exists(serverDir + '.' +  file_CheckIn):
-            metaFile = serverDir + '.' +  file_CheckIn
+        if os.path.exists(serverDir + '.' + fileCheckIn + '.enc.sign'):
+            metaFile = serverDir + '.' +  fileCheckIn + '.enc.sign'
+        elif os.path.exists(serverDir + '.' +  fileCheckIn + '.enc'):
+            metaFile = serverDir + '.' +  fileCheckIn + '.enc'
+        elif os.path.exists(serverDir + '.' +  fileCheckIn + '.sign'):
+            metaFile = serverDir + '.' +  fileCheckIn + '.sign'
+        elif os.path.exists(serverDir + '.' +  fileCheckIn):
+            metaFile = serverDir + '.' +  fileCheckIn
 
 
     lines=''
@@ -402,8 +402,7 @@ def process_check_in_delegated(serverDir, fileCheckIn, client, isOwner, fileSecF
         
         for line in meta:
             lines+=lines +'\n'
-                        
-        metaFileWrite.close()
+        meta.close()
         
     #Deal with specific flag options
     if fileSecFlag == 'CONFIDENTIALITY':
