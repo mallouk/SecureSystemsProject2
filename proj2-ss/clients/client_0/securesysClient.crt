@@ -1,0 +1,61 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 6 (0x6)
+    Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=US, ST=Georgia, L=Atlanta, O=Georgia Tech Secure Systems, OU=GT, CN=localhost
+        Validity
+            Not Before: Dec  4 03:21:45 2015 GMT
+            Not After : Dec  3 03:21:45 2016 GMT
+        Subject: C=US, ST=Georgia, O=Georgia Tech Secure Systems, OU=GT, CN=localhost
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (1024 bit)
+                Modulus:
+                    00:b9:de:9b:82:a1:98:2f:72:7e:8f:91:97:f6:27:
+                    fc:97:94:25:9b:d2:c5:5f:ee:a6:36:3c:23:73:ac:
+                    3f:15:30:62:1f:a2:e3:c6:98:ab:68:e8:24:c0:da:
+                    78:df:04:a1:78:e2:09:3c:c8:77:e5:47:f9:7b:2b:
+                    1e:8e:46:6a:3e:66:e9:d4:b0:ec:f9:9d:86:e2:d3:
+                    5e:b6:34:19:e9:d6:0e:ac:43:b7:0e:2b:2e:29:41:
+                    20:35:07:4c:5e:62:cd:56:95:3c:76:fb:df:3c:2d:
+                    95:4f:12:e0:0a:01:d1:ae:be:88:3e:db:f5:37:6b:
+                    63:3f:8d:50:81:6d:b8:d7:55
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                OpenSSL Generated Certificate
+            X509v3 Subject Key Identifier: 
+                5A:68:3A:3B:D9:BC:43:C3:CC:7D:E9:B1:F9:1C:CB:10:03:3A:9D:CE
+            X509v3 Authority Key Identifier: 
+                keyid:E1:E6:EF:31:27:30:F1:36:4B:E6:51:E1:88:C3:A8:C8:A6:5A:89:97
+
+    Signature Algorithm: sha256WithRSAEncryption
+         98:c8:37:34:3a:1c:7d:c7:7c:8f:93:31:d8:8f:f1:c3:fc:be:
+         ae:d7:1c:ea:9e:26:f0:24:36:8f:9c:80:05:ec:85:74:81:3e:
+         5d:98:14:74:c3:41:15:3f:52:ab:5e:52:20:c0:02:aa:9f:13:
+         e7:e4:1b:8b:67:df:ec:0b:c8:75:31:75:7e:85:38:9f:bb:d4:
+         c2:ba:b6:d0:8a:c0:eb:9b:bd:64:2f:55:64:a7:0c:be:b7:89:
+         a4:19:21:ad:c3:36:e5:05:af:92:4c:5c:cc:53:91:14:b0:7b:
+         a6:0b:cf:26:30:a8:46:a3:c9:0a:ed:85:b0:92:a1:3e:2b:ac:
+         d4:31
+-----BEGIN CERTIFICATE-----
+MIICzzCCAjigAwIBAgIBBjANBgkqhkiG9w0BAQsFADB4MQswCQYDVQQGEwJVUzEQ
+MA4GA1UECAwHR2VvcmdpYTEQMA4GA1UEBwwHQXRsYW50YTEkMCIGA1UECgwbR2Vv
+cmdpYSBUZWNoIFNlY3VyZSBTeXN0ZW1zMQswCQYDVQQLDAJHVDESMBAGA1UEAwwJ
+bG9jYWxob3N0MB4XDTE1MTIwNDAzMjE0NVoXDTE2MTIwMzAzMjE0NVowZjELMAkG
+A1UEBhMCVVMxEDAOBgNVBAgMB0dlb3JnaWExJDAiBgNVBAoMG0dlb3JnaWEgVGVj
+aCBTZWN1cmUgU3lzdGVtczELMAkGA1UECwwCR1QxEjAQBgNVBAMMCWxvY2FsaG9z
+dDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAud6bgqGYL3J+j5GX9if8l5Ql
+m9LFX+6mNjwjc6w/FTBiH6LjxpiraOgkwNp43wSheOIJPMh35Uf5eysejkZqPmbp
+1LDs+Z2G4tNetjQZ6dYOrEO3DisuKUEgNQdMXmLNVpU8dvvfPC2VTxLgCgHRrr6I
+Ptv1N2tjP41QgW2411UCAwEAAaN7MHkwCQYDVR0TBAIwADAsBglghkgBhvhCAQ0E
+HxYdT3BlblNTTCBHZW5lcmF0ZWQgQ2VydGlmaWNhdGUwHQYDVR0OBBYEFFpoOjvZ
+vEPDzH3psfkcyxADOp3OMB8GA1UdIwQYMBaAFOHm7zEnMPE2S+ZR4YjDqMimWomX
+MA0GCSqGSIb3DQEBCwUAA4GBAJjINzQ6HH3HfI+TMdiP8cP8vq7XHOqeJvAkNo+c
+gAXshXSBPl2YFHTDQRU/UqteUiDAAqqfE+fkG4tn3+wLyHUxdX6FOJ+71MK6ttCK
+wOubvWQvVWSnDL63iaQZIa3DNuUFr5JMXMxTkRSwe6YLzyYwqEajyQrthbCSoT4r
+rNQx
+-----END CERTIFICATE-----

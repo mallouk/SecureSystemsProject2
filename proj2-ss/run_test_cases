@@ -1,0 +1,36 @@
+#!/bin/bash
+
+
+read -p "python client.py --client client_0 --check_in 0.txt --sec_flag INTEGRITY"
+python client.py --client client_0 --check_in 0.txt --sec_flag INTEGRITY
+echo ""
+ls -la server/files
+echo ""
+echo ""
+
+read -p "Verifying signature of 0.txt with: python verify_signature.py 0.txt"
+python verify_signature.py 0.txt
+
+echo ""
+read -p "python client.py --client client_0 --check_out 0.txt --output 0_copy.txt"
+python client.py --client client_0 --check_out 0.txt --output 0_copy.txt
+echo ""
+ls -la clients/client_0/files/
+
+echo ""
+read -p "python client.py --client client_1 --check_out 0.txt --output 0_copy.txt"
+python client.py --client client_1 --check_out 0.txt --output 0_copy.txt
+echo ""
+
+ls -la clients/client_1/files/
+echo ""
+
+read -p "python client.py --client client_0 --safe_delete 0.txt"
+python client.py --client client_0 --safe_delete 0.txt
+echo ""
+ls -la server/files/
+echo ""
+
+read -p "python client.py --client client_0 --check_out 0.txt --output 0_copy.txt"
+python client.py --client client_0 --check_out 0.txt --output 0_copy2.txt
+
