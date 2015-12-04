@@ -8,6 +8,7 @@ sudo apt-get install python python-virtualenv
 sudo apt-get install python-dev
 sudo apt-get install python-pip
 pip install pycrypto
+pip install flask
 
 git clone https://github.com/mallouk/SecureSystemsProject2.git
 echo ""
