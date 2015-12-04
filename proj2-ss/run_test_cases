@@ -70,3 +70,31 @@ read -p "python client.py --client client_0 --delegate 1.txt client_1 30 checkin
 python client.py --client client_0 --delegate 1.txt client_1 30 checkin+checkout false
 echo ""
 
+
+read -p "python client.py --client client_1 --check_out 1.txt --output 1_copy.txt"
+python client.py --client client_1 --check_out 1.txt --output 1_copy.txt
+echo ""
+ls -la clients/client_1/files/
+echo "random text" > clients/client_1/files/1.txt
+echo ""
+
+read -p "python client.py --client client_1 --check_in 1.txt"
+python client.py --client client_1 --check_in 1.txt
+ls -la server/files
+echo ""
+
+
+read -p "python client.py --client client_0 --delegate 1.txt client_2 30 checkin_checkout false"
+python client.py --client client_0 --delegate 1.txt client_2 30 checkin+checkout false
+echo ""
+
+echo "Sleeping for 30 seconds to force the delegation to expire..."
+sleep 30
+
+rm -rf server/files/* 2> /dev/null
+rm -rf server/files/.* 2> /dev/null
+read -p "python client.py --client client_1 --check_in 1.txt"
+python client.py --client client_0 --check_in 1.txt
+ls -la server/files
+echo ""
+
