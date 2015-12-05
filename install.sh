@@ -1,24 +1,28 @@
 #!/bin/bash
 
-sudo apt-get update
-sudo apt-get upgrade
+sudo apt-get -y update
+sudo apt-get -y upgrade
 
-sudo apt-get install git gcc g++ make gedit emacs23 python python-virtualenv nginx openssl python-pip python-dev
+sudo apt-get -y install git gcc g++ 
+sudo apt-get -y install openssl
+sudo apt-get -y install nginx
+sudo apt-get -y install python python-virtualenv
+sudo apt-get -y install python-dev
+sudo apt-get -y install python-pip
 
 pip install pycrypto
+pip install flask
 
 git clone https://github.com/mallouk/SecureSystemsProject2.git
 echo ""
 echo ""
 echo ""
-echo "gcc/g++/make...for general dev tools and if you ever want to enable VBoxGuestAdditions"
-echo "gedit...for your developing purposes"
-echo "emacs...in case you ever want to get into a wonderful thing of emacs text editing"
-echo "python...again obvious"
+echo "gcc and g++...for general dev tools and if you ever want to enable VBoxGuestAdditions"
+echo "python"
 echo "python-virtualenv...used with flask"
 echo "nginx...used as our server backend"
-echo "openssl...cert things"
+echo "openssl...certificate tools"
 echo "python-pip and python-dev"
-echo "install pycrypto"
+echo "pycrypto for hashing and encrypting"
 echo ""
 echo "I believe that is everything. Thanks!"
