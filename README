@@ -20,6 +20,9 @@
 Since the code and all respective clients are set up already, just the run_test_cases script to step through the system for the client/server communication.
 1) Open terminal and run the server.py script:
    python server.py
+   The server may prompt you for a PEM password. This was used when generating the certs.
+   The password is "pass"
+   
 
 2) Open a second terminal and run the run_test cases bash script
    ./run_test_cases
