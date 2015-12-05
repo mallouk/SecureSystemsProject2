@@ -22,6 +22,11 @@ parser.add_argument('--output', action='store')
 #Parse the args and place them in a var. We create the directory paths to wherever our certs and keys are for referencing.
 args = parser.parse_args();
 
+if str(args.check_in).startswith('.') or str(args.check_out).startswith('.'):
+    print "Can't have your file begin with a period"
+    exit()
+
+
 #Check if client actually exists
 client_dir=os.getcwd()+ '/clients/' + args.client
 if not os.path.isdir(client_dir):
