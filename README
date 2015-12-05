@@ -1,3 +1,5 @@
+0) Run the install script in this directory to set up the environment and install nginx, etc.
+
 Since the code and all respective clients are set up already, just the run_test_cases script to step through the system for the client/server communication.
 1) Open terminal and run the server.py script:
    python server.py
@@ -13,9 +15,6 @@ Make sure that a server.py script is running in a seperate terminal!!!
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-
-
-1) Run the install script in this directory to set up the environment and install nginx, etc.
 
 2) First run the conf_ca script to generate the certs for the CA
 ./conf_ca

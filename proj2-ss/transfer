@@ -8,9 +8,8 @@ sudo cp -r bundle.crt /etc/nginx/ssl/
 
 
 sudo cp -r securesysServer.key /etc/nginx/ssl/
-<<<<<<< HEAD
 
 sudo cp -r clients/client_0/securesysClient.crt /etc/nginx/ssl/
-=======
+
 sudo cp -r ca/securesysCA.crt /etc/nginx/ssl/
->>>>>>> refs/remotes/origin/master
+
