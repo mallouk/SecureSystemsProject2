@@ -44,13 +44,13 @@ if args.check_in != defaultArg:
     curr_time_seconds = int(round(time.time()))
     data={'client':args.client, 'file':args.check_in, 'sec_flag':args.sec_flag, 'curr_time':curr_time_seconds}
     files={'files':open(clientDir + args.check_in, 'rb')}
-    r = requests.post("http://localhost:5000/check_in", verify=cert_auth_crt, params=data, files=files)
+    r = requests.post("https://localhost:5000/check_in", verify=cert_auth_crt, cert=(client_crt, client_key), params=data, files=files)
     print(r.text)
 
 if args.check_out != defaultArg:
     curr_time_seconds = int(round(time.time()))
     data={'client':args.client, 'file':args.check_out, 'output':args.output,'curr_time':curr_time_seconds}
-    r = requests.get("http://localhost:5000/check_out", verify = cert_auth_crt, params=data)
+    r = requests.get("https://localhost:5000/check_out", verify = cert_auth_crt, params=data)
     if r.headers['ReadSuccess'] == 'true':
         fileTest = r.text
         writer = open(clientDir + args.output, 'w')
@@ -63,13 +63,13 @@ if args.delegate != defaultArg:
     data={'client':args.client, 'delegate_file':args.delegate[0], 'delegate_client':args.delegate[1],
           'delegate_time':args.delegate[2], 'delegate_permission': args.delegate[3],
           'delegate_prop':args.delegate[4], 'curr_time':curr_time_seconds}
-    r = requests.get("http://localhost:5000/delegate", verify = cert_auth_crt, params=data)
+    r = requests.get("https://localhost:5000/delegate", verify = cert_auth_crt, params=data)
     print(r.text)
 
 if args.safe_delete != defaultArg:
     curr_time_seconds = int(round(time.time()))
     data={'client':args.client, 'file':args.safe_delete, 'curr_time': curr_time_seconds}
-    r = requests.get("http://localhost:5000/safe_delete", verify = cert_auth_crt, params=data)
+    r = requests.get("https://localhost:5000/safe_delete", verify = cert_auth_crt, params=data)
     print r.text
 
 

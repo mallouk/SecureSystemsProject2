@@ -1,1 +1,2 @@
-client_0***NO
+client_0***YES
+client_1***1449275203***checkin+checkout***false
